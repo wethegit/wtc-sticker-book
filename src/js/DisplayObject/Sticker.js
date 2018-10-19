@@ -1,0 +1,1060 @@
+import Stage from '../application/Stage';
+import eventListener from '../application/Events';
+import { resources } from '../application/Preloader';
+
+// This just allows us to pass in an event object and pause / cancel it.
+const pauseEvent = (e)=> {
+  if(e.stopPropagation) e.stopPropagation();
+  if(e.preventDefault) e.preventDefault();
+  e.cancelBubble=true;
+  e.returnValue=false;
+  return false;
+}
+
+/**
+ * This class provides an extension of the PIXI container that provides specialised 
+ * functionality for the sticker book.
+ *
+ * @class Sticker
+ * @augments PIXI.Container
+ * @author Liam Egan <liam@wethecollective.com>
+ * @version 0.1.0
+ * @created Oct 18, 2018
+ */
+class Sticker extends PIXI.Container {
+  
+	/**
+	 * The Sticker Class constructor. Takes a texture object and creates the sticker.
+	 *
+	 * @constructor
+	 * @param {PIXI.Texture} texture 				The texture object to use to create the sticker
+	 */
+  constructor(texture) {
+    super();
+    
+    // Bind any necessary listeners
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
+    this.onKeyPress = this.onKeyPress.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
+    this.onDeleted = this.onDeleted.bind(this);
+    this.onFocus = this.onFocus.bind(this);
+    this.onUnFocus = this.onUnFocus.bind(this);
+    this.onDisable = this.onDisable.bind(this);
+    this.onEnable = this.onEnable.bind(this);
+    this.onMouseDownResize = this.onMouseDownResize.bind(this);
+    this.onMouseUpResize = this.onMouseUpResize.bind(this);
+    this.onMouseMoveResize = this.onMouseMoveResize.bind(this);
+    
+    this.texture = texture; // Add some testing here for this and throw an error if it fails
+    
+    this.sprite = new PIXI.Sprite(this.texture);
+    this.setDimensions(this.sprite.width, this.sprite.height);
+    
+    // Set up the indicator
+    this.indicator = new PIXI.Graphics();
+    this.setIndicatorGraphics();
+    
+    // Add the buttons
+    this.buttonDelete = this.createButton(this.deleteButtonTexture);
+    this.buttonResize = this.createButton(this.resizeButtonTexture);
+    // position the buttons
+    this.setButtonPosition(this.buttonDelete, Sticker.BUTTON_DELETE);
+    this.setButtonPosition(this.buttonResize, Sticker.BUTTON_RESIZE);
+    // set up the button listeners and emitters
+    // Delete button mouse down - just cancels any unfocus
+    this.buttonDelete.on('mousedown', () => {
+      this.clickFocus = true;
+    });
+    this.buttonDelete.on('touchstart', () => {
+      this.clickFocus = true;
+    });
+    // Delete button mouse us - Deletes the sticker
+    this.buttonDelete.on('mouseup', (e)=> {
+      this.onDelete(e);
+    });
+    this.buttonDelete.on('touchend', (e)=> {
+      this.onDelete(e);
+    });
+    // The position button mouse down event
+    this.buttonResize.on('mousedown', this.onMouseDownResize);
+    this.buttonResize.on('touchstart', this.onMouseDownResize);
+    // The position button mouse up event
+    this.buttonResize.on('mouseup', this.onMouseUpResize);
+    this.buttonResize.on('touchend', this.onMouseUpResize);
+    this.buttonResize.on('mouseupoutside', this.onMouseUpResize);
+    this.buttonResize.on('touchendoutside', this.onMouseUpResize);
+    // The position button mouse move event
+    this.buttonResize.on('mousemove', this.onMouseMoveResize);
+    this.buttonResize.on('touchmove', this.onMouseMoveResize);
+    
+    // Set up self interactivity
+    this.interactive = true;
+    this.sprite.interactive = true;
+    this.sprite.on('mouseover', (e) => {
+      document.body.style.cursor = 'all-scroll';
+    });
+    this.sprite.on('mouseout', (e) => {
+      document.body.style.cursor = 'default';
+    });
+    this.sprite.on('mousemove', this.onMouseMove);
+    this.sprite.on('touchmove', this.onMouseMove);
+    this.sprite.on('mousedown', this.onMouseDown);
+    this.sprite.on('touchstart', this.onMouseDown);
+    this.sprite.on('mouseup', this.onMouseUp);
+    this.sprite.on('touchend', this.onMouseUp);
+    
+    // And custom events
+    // this.onDeleted = this.onDeleted.bind(this);
+    // this.onFocus = this.onFocus.bind(this);
+    // this.onUnFocus = this.onUnFocus.bind(this);
+    // this.onDisable = this.onDisable.bind(this);
+    // this.onEnable = this.onEnable.bind(this);
+    eventListener.on('sticker-focus', this.onFocus);
+    eventListener.on('sticker-unfocus', this.onUnFocus);
+    
+    // Add everything to the container
+    this.addChild(this.indicator);
+    this.addChild(this.sprite);
+    this.addChild(this.buttonDelete);
+    this.addChild(this.buttonResize);
+    
+    this.focussed = false;
+    
+    
+    /**
+     * Sticker add event. Fired when a sticker is finishing initialising
+     *
+     * @event sticker-added
+     * @type {object}
+     * @property {object} sticker - The object representation of the sticker being added (this)
+     */
+    eventListener.emitEvent('sticker-added', [this]);
+  }
+  
+  
+  /**
+   * Public methods
+   */
+  
+	/**
+	 * This sets the dimensions of the stage and sets up the ratio 
+   * object for future use.
+	 *
+	 * @public
+   * @param {number} w    The width of the stage
+   * @param {number} h    The height of the stage
+	 * @return null
+	 */
+  setDimensions(w, h) {
+    if(w > h) {
+      this.diameter = h;
+    } else {
+      this.diameter = w;
+    }
+    this.ratio = w / h;
+    
+    this.w = w;
+    this.h = h;
+    
+    return;
+  }
+  
+	/**
+	 * Set up the indicator graphics. We put this in a function in case we need to update it later on.
+   * @todo add removal of old graphics, if they exist
+	 *
+	 * @public
+	 * @return null
+	 */
+  setIndicatorGraphics() {
+    let radius = this.radius * this.indicatorScale;
+
+    this.indicator.clear();
+    this.indicator.beginFill(this.helperColour, this.helperOpacity);
+    this.indicator.drawCircle(0, 0, radius);
+  }
+  
+	/**
+	 * Create a button object from a provided texture, or else create a placeholder
+	 *
+	 * @public
+   * @param {PIXI.Texture} texture    The texture to use to create the button
+	 * @return null
+	 */
+  createButton(texture) {
+    let button;
+    if(texture) {
+      button = new PIXI.Sprite(texture);
+      button.anchor.x = button.anchor.y = 0.5;
+    } else {
+      // This is here simply to provide a fallback in the case the 
+      // provided graphics don't exist or are broken for a button
+      button = new PIXI.Graphics();
+      button.clear();
+      button.beginFill(this.helperColour, this.helperOpacity);
+      button.drawCircle(0, 0, 60);
+    }
+    
+    button.scale.x = button.scale.y = this.buttonScale;
+    button.alpha = 0;
+    
+    return button;
+  }
+  
+	/**
+	 * Set the cartesian position of a button based on its type and the radius of the sticker.
+   * Because sticker size is measured in radial coordinates, we translate the position of 
+   * the buttons from an angle, this means that buttons fluidly move out and in when scaling.
+	 *
+	 * @public
+   * @param {PIXI.Container} buttonInstance     The button instance to position
+   * @param {number} buttonType                 The constant indicator of the button to position.
+	 * @return null
+	 */
+  setButtonPosition(buttonInstance, buttonType) {
+    if(buttonInstance instanceof PIXI.Container) {
+      let radPos;
+      // Currently the radial positions are a little magical, if we add more buttons
+      // in future, or we want to have finer control over the position of the buttons
+      // we can supplement this with a property or a calculation.
+      // For now, magic numbers are more than sufficient.
+      switch(buttonType) {
+        case Sticker.BUTTON_DELETE:
+          radPos = -2.35619449
+          break;
+        case Sticker.BUTTON_RESIZE:
+          radPos = 0.785398
+          break;
+      }
+      const radius = this.radius * this.indicatorScale;
+      buttonInstance.position.x = Math.cos(radPos) * radius;
+      buttonInstance.position.y = Math.sin(radPos) * radius;
+    }
+  }
+  
+	/**
+	 * This method focusses the sticker, making it active and firing a sticker-focus
+   * event that should remove the focus all other on-stage elements
+	 *
+	 * @public
+	 * @return null
+	 */
+  focus() {
+    if(this.hasFocus === true) return;
+    
+    this.hasFocus = true;
+    
+    /**
+     * Sticker focus event. Fired when the sticker is focussed for whatever readon
+     *
+     * @event sticker-focus
+     * @type {object}
+     * @property {object} sticker - The object representation of the sticker being focussed (this)
+     */
+    eventListener.emitEvent('sticker-focus', [this]);
+    
+    // Make everythign internal to the sticker appear
+    this.indicator.alpha = 1;
+    this.indicator.scale.x = 1;
+    this.indicator.scale.y = 1;
+    this.buttonDelete.alpha = 1;
+    this.buttonResize.alpha = 1;
+    
+    // Making the control buttons interactive
+    // @todo test whether we need to add this to a timer instead
+    this.buttonDelete.interactive = true;
+    this.buttonResize.interactive = true;
+  }
+  
+	/**
+	 * This method unfocusses the sticker, making it active and firing a sticker-unfocussed
+   * event.
+	 *
+	 * @public
+	 * @return null
+	 */
+  unfocus() {
+    if(this.hasFocus === false) return;
+    
+    this.hasFocus = false;
+    
+    /**
+     * Sticker unfocussed event. Fired when the sticker is un-focussed for whatever readon
+     *
+     * @event sticker-unfocussed
+     * @type {object}
+     * @property {object} sticker - The object representation of the sticker being focussed (this)
+     */
+    eventListener.emitEvent('sticker-unfocussed', [this]);
+    
+    // Make everythign internal to the sticker disappear
+    this.indicator.alpha = 0;
+    this.indicator.scale.x = .1;
+    this.indicator.scale.y = .1;
+    this.buttonDelete.alpha = 0;
+    this.buttonResize.alpha = 0;
+    
+    // Making the control buttons non-interactive
+    // @todo test whether we need to add this to a timer instead
+    this.buttonDelete.interactive = false;
+    this.buttonResize.interactive = false;
+  }
+  
+	/**
+	 * This method detects whether the sticker should be destroyed by testing whether it has 
+   * a parent element.
+	 *
+	 * @public
+	 * @return null
+	 */
+  detectDestroy() {
+    if(this.parent === null) {
+      this.destroy();
+    }
+  }
+  
+	/**
+	 * This method destroys the sticker and removes all memory-traces of it.
+	 *
+	 * @public
+	 * @return null
+	 */
+  destroy() {
+    super.destroy();
+    
+    // Removing external event listeners
+    eventListener.off('sticker-focus', this.onFocus);
+  }
+  
+  /**
+   * Event callbacks
+   */
+  
+	/**
+	 * Reacts to mouse move on the sticker itself. Responsible for positioning the sticker based
+   * on dragging
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onMouseMove(e) {
+    if(this.mouseDown === true) {
+      this.mousePosition = e.data.getLocalPosition(this.parent);
+      
+      let oldPosition = {x: this.position.x, y: this.position.y};
+      this.position.x = this.mousePosition.x + this.offsetPosition.x;
+      this.position.y = this.mousePosition.y + this.offsetPosition.y;
+      
+      /**
+       * Sticker mouse move event. Fired when the mouse or finder moves over a sticker
+       *
+       * @event sticker-dragged
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being added (this)
+       * @property {object} mousePosition - the position of the mouse within the sticker
+       * @property {object} oldPosition - the old (previous) position of the sticker itself
+       * @property {object} position - the current position of the sticker itself
+       */
+      eventListener.emitEvent('sticker-dragged', [this, this.mousePosition, oldPosition, this.position]);
+      
+      pauseEvent(e);
+    }
+  }
+	/**
+	 * Reacts to mouse down on the sticker itself. Responsible for focussing and setting up
+   * variable for use by mouse movement (dragging)
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onMouseDown(e) {
+    this.clickFocus = true;
+    
+    // This just brings the sticker to the front of the stack
+    let parent = this.parent;
+    parent.removeChild(this);
+    parent.addChild(this);
+    
+    // Focus the sticker and set it up for dragging
+    this.focus();
+    this.mouseDown = true;
+    this.mousPosStart = e.data.getLocalPosition(this.parent);
+    this.offsetPosition = {
+      x: this.position.x - this.mousPosStart.x,
+      y: this.position.y - this.mousPosStart.y
+    }
+      
+    pauseEvent(e);
+  }
+	/**
+	 * Reacts to mouse up on the sticker. All this is here for is to provide a way to
+   * escape from dragging.
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onMouseUp(e) {
+    this.mouseDown = false;
+  }
+	/**
+	 * @todo
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onKeyPress(e) {
+    
+  }
+	/**
+	 * @todo
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onKeyUp(e) {
+    
+  }
+	/**
+	 * @todo
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onDeleted(target) {
+    this.detectDestroy();
+  }
+	/**
+	 * Responds to the custom focus event. If the target passed by the vent is
+   * not *this* then we unfocus this sticker.
+	 *
+	 * @public
+   * @param {Object} target     The target of the focus.
+	 * @return null
+	 */
+  onFocus(target) {
+    if(target !== this) {
+      this.unfocus();
+    }
+  }
+	/**
+	 * Responds to the custom unfocus event which is fired from a higher-level
+   * object. If the sticker has just been clicked on (*clickFocus*) then
+   * we do nothing.
+	 *
+	 * @public
+   * @param {Object} target     The target of the focus.
+	 * @return null
+	 */
+  onUnFocus(target) {
+    if(this.clickFocus === false) this.unfocus();
+    this.clickFocus = false;
+  }
+	/**
+	 * @todo
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onDisable(target) {
+    this.unfocus();
+    this.disable();
+    this.clickFocus = false;
+  }
+	/**
+	 * @todo
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onEnable(target) {
+    this.enable();
+  }
+	/**
+	 * Responds to the delete event fired from the delet button or elsewhere.
+   * This deletes the target from the PIXI object model and destroys itself.
+	 *
+	 * @public
+   * @param {Object} e     The event object, normally from click
+	 * @return null
+	 */
+  onDelete(e) {
+    this.parent.removeChild(this);
+    this.destroy();
+  }
+	/**
+	 * Responds to the mouse down event on the resize button. This sets up the state
+   * that provides the functionality for the resize actions.
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onMouseDownResize(e) {
+    this.clickFocus = true;
+    this.mouseDownResize = true;
+    
+    pauseEvent(e);
+  }
+	/**
+	 * Responds to the mouse up event on the resize button. This stops the resize action
+   * and settles the state of the sticker back into its dormant state.
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onMouseUpResize(e) {
+    this.mouseDownResize = false;
+    
+    this.baseRotation = this.stickerRotation;
+    this.setButtonPosition(this.buttonResize, Sticker.BUTTON_RESIZE);
+  }
+	/**
+	 * Responds to the mouse move event on the resize button. This method finds the 
+   * relative mouse position, generates polar coordinates from it, and resizes
+   * and rotates the sticker based on these polars.
+	 *
+	 * @public
+   * @param {Object} e     The event object
+	 * @return null
+	 */
+  onMouseMoveResize(e) {
+    if(this.mouseDownResize === true) {
+      let mousepos = e.data.getLocalPosition(this.parent);
+      // The length vector of the relative mouse position
+      let distance = {
+        x: mousepos.x - this.position.x,
+        y: mousepos.y - this.position.y
+      };
+      // The polar coordinates derived from this position
+      let polar = {
+        r: Math.sqrt(distance.x * distance.x + distance.y * distance.y),
+        phi: Math.atan2(distance.y, distance.x)
+      };
+      // The current radius of the sticker
+      let radius = this.radius * this.indicatorScale;
+      
+      // This is the serious stuff. This sets the rotation and the radius of the sticker based on the
+      // polar coordinates generated above
+      // @todo add shift key functionality here
+      this.stickerRotation = polar.phi + this.baseRotation - 0.785398; // Again, this magin number represents the rotational period for the resize button
+      this.radius = polar.r / this.indicatorScale;
+      
+      // Position the resize buttons so the user has a nice indication that they're doing something.
+      this.buttonResize.position.x = Math.cos(polar.phi) * radius;
+      this.buttonResize.position.y = Math.sin(polar.phi) * radius;
+      
+      /**
+       * Sticker resize event. Fired when a sticker is resized and / or rotated
+       *
+       * @event sticker-resized
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being resized (this)
+       * @property {number} radius - The new radius of the modified object
+       * @property {number} rotation - The new rotation of the modified object
+       */
+      eventListener.emitEvent('sticker-resize', [this, this.rotation, this.radius]);
+      
+      pauseEvent(e);
+    }
+  }
+  
+  
+  
+  /**
+   * Getters and setters
+   */
+  
+  /**
+   * (getter/setter) The colour of the helper circle that appears behind the 
+   * sticker when focussed
+   *
+   * @type {number}
+   * @default 0x00c6ff
+   */
+  set helperColour(value) {
+    if(!isNaN(value)) {
+      this._helperColour = value;
+    }
+  }
+  get helperColour() {
+    return this._helperColour || 0x00c6ff;
+  }
+  
+  /**
+   * (getter/setter) The opacity of the helper circle that appears behind the 
+   * sticker when focussed
+   *
+   * @type {number}
+   * @default 0.5
+   */
+  set helperOpacity(value) {
+    if(value >= 0) {
+      this._helperOpacity = value;
+    }
+  }
+  get helperOpacity() {
+    return this._helperOpacity >= 0 ? this._helperOpacity : 0.5;
+  }
+  
+  /**
+   * (getter/setter) Whether the helper circle should have a stroke
+   * on it.
+   * @todo
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set helperStroke(value) {
+    this._helperStroke = value === true;
+  }
+  get helperStroke() {
+    return this._helperStroke === true;
+  }
+  
+  /**
+   * (getter/setter) The PIXI Texture object that represents the sticker
+   * graphics.
+   *
+   * @type {object}
+   * @default null
+   */
+  set texture(value) {
+    if(value instanceof PIXI.Texture) {
+      this._texture = value;
+    }
+  }
+  get texture() {
+    return this._texture || null;
+  }
+  
+  /**
+   * (getter/setter) Indicates whether the sticker has "click focus", which just
+   * indicates that the sticker is in a state whereby it can't have it's focus
+   * immediately cancelled.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set clickFocus(value) {
+    this._clickFocus = value === true;
+  }
+  get clickFocus() {
+    return this._clickFocus === true;
+  }
+  
+  /**
+   * (getter/setter) Indicates whether the sticker has focus, which provides all
+   * of the flags for determining whether the sticker should react to user input.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set hasFocus(value) {
+    this._hasFocus = value === true;
+  }
+  get hasFocus() {
+    return this._hasFocus === true;
+  }
+  
+  /**
+   * (getter/setter) The rotation of the sticker itself. We don't use `rotation`
+   * here as that would clobber the extended PIXI class's property of the same 
+   * name. Here we take the provided rotation and transmute it onto the sprite.
+   *
+   * @type {number}
+   * @default 0
+   */
+  set stickerRotation(value) {
+    this.sprite.rotation;
+    if(!isNaN(value)) {
+      this._stickerRotation = value;
+      this.sprite.rotation = value;
+    }
+  }
+  get stickerRotation() {
+    return isNaN(this._stickerRotation) ? 0 : this._stickerRotation;
+  }
+  
+  /**
+   * (getter/setter) The base rotation provides a transofrmation basis for
+   * use during the resize / rotate actions. Basically we use:
+   * mouse rotation + base rotation = sticker rotation
+   *
+   * @type {number}
+   * @default 0
+   */
+  set baseRotation(value) {
+    if(!isNaN(value)) this._baseRotation = value;
+  }
+  get baseRotation() {
+    return this._baseRotation || 0;
+  }
+  
+  /**
+   * (getter/setter) The size to scale the control buttons for the sticker.
+   *
+   * @type {number}
+   * @default 0.5
+   */
+  set buttonScale(value) {
+    if(value > 0) this._buttonScale = value;
+  }
+  get buttonScale() {
+    return this._buttonScale || .5;
+  }
+  
+  /**
+   * (getter/setter) The size of the indicator in relation to the radius of
+   * the sticker.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  set indicatorScale(value) {
+    if(value > 0) this._indicatorScale = value;
+  }
+  get indicatorScale() {
+    return this._indicatorScale || 1.;
+  }
+  
+  /**
+   * (getter/setter) The sprite to display. This is basically what the user 
+   * thinks of as the sticker.
+   *
+   * @type {PIXI.Sprite}
+   * @default null
+   */
+  set sprite(value) {
+    if(value instanceof PIXI.Sprite) {
+      value.name = 'sprite';
+      this._sprite = value;
+      this._sprite.anchor.x = .5;
+      this._sprite.anchor.y = .5;
+    }
+  }
+  get sprite() {
+    return this._sprite || null;
+  }
+  
+  /**
+   * (getter/setter) The grahics object to use to display the indicator when
+   * the user has focussed the sticker.
+   *
+   * @type {PIXI.Graphics}
+   * @default null
+   */
+  set indicator(value) {
+    if(value instanceof PIXI.Graphics) {
+      value.name = 'indicator';
+      this._indicator = value;
+    }
+  }
+  get indicator() {
+    return this._indicator || null;
+  }
+  
+  /**
+   * (getter/setter) The delete button PIXI object. 
+   *
+   * @type {PIXI.Container}
+   * @default null
+   */
+  set buttonDelete(value) {
+    if(value instanceof PIXI.Container) {
+      value.name = 'deleteButton';
+      this._buttonDelete = value;
+    }
+    
+  }
+  get buttonDelete() {
+    return this._buttonDelete || null;
+  }
+  
+  /**
+   * (getter/setter) The resize button PIXI object. 
+   *
+   * @type {PIXI.Container}
+   * @default null
+   */
+  set buttonResize(value) {
+    if(value instanceof PIXI.Container) {
+      value.name = 'resizeButton';
+      this._buttonResize = value;
+    }
+  }
+  get buttonResize() {
+    return this._buttonResize || null;
+  }
+  
+  /**
+   * (getter/setter) diameter of the sticker. This is used to determine
+   * relative size when resizing etc.
+   *
+   * @type {number}
+   * @default 0
+   */
+  set diameter(value) {
+    if(!isNaN(value)) this._diameter = value;
+  }
+  get diameter() {
+    return this._diameter || 0;
+  }
+  
+  /**
+   * (getter/setter) the ratio of the sticker. This is used to determine
+   * the diameter and basic sticker values on instanciation.
+   *
+   * @type {number}
+   * @default 0
+   */
+  set ratio(value) {
+    if(!isNaN(value)) this._ratio = value;
+  }
+  get ratio() {
+    return this._ratio || 0;
+  }
+  
+  /**
+   * (getter/setter) radius of the sticker. This is used to determine
+   * relative size when resizing etc.
+   *
+   * @type {number}
+   * @default diameter * .5 + 20
+   */
+  set radius(value) {
+    if(!isNaN(value)) {
+      this._radius = value;
+      
+      const w = value * 2. - 40;
+      
+      if(this.ratio > 1) {
+        this.sprite.width = w * this.ratio;
+        this.sprite.height = w;
+      } else {
+        this.sprite.width = w;
+        this.sprite.height = w / this.ratio;
+      }
+
+      this.setDimensions(this.sprite.width , this.sprite.height);
+      this.setButtonPosition(this.buttonDelete, Sticker.BUTTON_DELETE);
+      this.setButtonPosition(this.buttonResize, Sticker.BUTTON_RESIZE);
+      this.setIndicatorGraphics();
+    }
+  }
+  get radius() {
+    return this.diameter * .5 + 20;
+  }
+  
+  /**
+   * (getter/setter) whether the sticker is currently focussed. this
+   * sets up the control components of the sticker.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set focussed(value) {
+    if(value === true && this.focussed !== true) {
+      /**
+       * Sticker focus event. Fired when a sticker receives focus somehow
+       *
+       * @event sticker-dragged
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being focussed (this)
+       */
+      eventListener.emitEvent('sticker-focus', [this]);
+      
+      this.indicator.alpha = 1;
+      this.indicator.scale.x = 1;
+      this.indicator.scale.y = 1;
+      this.buttonDelete.alpha = 1;
+      this.buttonResize.alpha = 1;
+      
+      setTimeout(()=> {
+        this.buttonDelete.interactive = true;
+        this.buttonResize.interactive = true;
+      }, 500);
+      
+      this._focussed = true;
+    } else if(this.focussed === true) {
+      /**
+       * Sticker unfocus event. Fired when a sticker loses focus via a focus event
+       *
+       * @event sticker-dragged
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being unfocussed (this)
+       */
+      eventListener.emitEvent('sticker-unfocus', [this]);
+      this.indicator.alpha = 0;
+      this.indicator.scale.x = .1;
+      this.indicator.scale.y = .1;
+      this.buttonDelete.alpha = 0;
+      this.buttonResize.alpha = 0;
+      
+      setTimeout(()=> {
+        this.buttonDelete.interactive = false;
+        this.buttonResize.interactive = false;
+      }, 500);
+      
+      this._focussed = false;
+    }
+  }
+  get focussed() {
+    return this._focussed === true;
+  }
+  
+  /**
+   * (getter/setter) The texture for the delete button. This is here
+   * to make the class more flexible to updates for people in the future.
+   *
+   * @type {PIXI.Texture}
+   * @default null
+   */
+  set deleteButtonTexture(value) {
+    if(value instanceof PIXI.texture) {
+      this._deleteButtonTexture = value;
+    }
+  }
+  get deleteButtonTexture() {
+    let tex;
+    try {
+      tex = this._deleteButtonTexture || resources[Sticker.BUTTON_DELETE_NAME].texture;
+    } catch(error) {
+      tex = null;
+    }
+    
+    return tex;
+  }
+  
+  /**
+   * (getter/setter) The texture for the resize button. This is here
+   * to make the class more flexible to updates for people in the future.
+   *
+   * @type {PIXI.Texture}
+   * @default null
+   */
+  set resizeButtonTexture(value) {
+    if(value instanceof PIXI.texture) {
+      this._resizeButtonTexture = value;
+    }
+  }
+  get resizeButtonTexture() {
+    let tex;
+    try {
+      tex = this._resizeButtonTexture || resources[Sticker.BUTTON_RESIZE_NAME].texture;
+    } catch(error) {
+      tex = null;
+    }
+    
+    return tex;
+  }
+  
+  /**
+   * (getter/setter) indicates whether the user's mouse is down on the sticker.
+   * this simply provides a hard case boolean for this value.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set mouseDown(value) {
+    this._mouseDown = value === true;
+  }
+  get mouseDown() {
+    return this._mouseDown === true;
+  }
+  
+  /**
+   * @todo
+   *
+   * @type {object}
+   * @default {x: 0, y: 0}
+   */
+  set mousePosStart(value) {
+    if(typeof value === 'object' && !isNaN(value.x) && !isNaN(value.x)) {
+      this._mousePosStart = value;
+    }
+  }
+  get mousePosStart() {
+    return this._mousePosStart || {x: 0, y: 0};
+  }
+  
+  /**
+   * @todo
+   *
+   * @type {object}
+   * @default {x: 0, y: 0}
+   */
+  set offsetPosition(value) {
+    if(typeof value === 'object' && !isNaN(value.x) && !isNaN(value.x)) {
+      this._offsetPosition = value;
+    }
+  }
+  get offsetPosition() {
+    return this._offsetPosition || {x: 0, y: 0};
+  }
+  
+  /**
+   * @todo
+   *
+   * @type {object}
+   * @default {x: 0, y: 0}
+   */
+  set mousePosition(value) {
+    if(typeof value === 'object' && !isNaN(value.x) && !isNaN(value.x)) {
+      this._mousePosition = value;
+    }
+  }
+  get mousePosition() {
+    return this._mousePosition || {x: 0, y: 0};
+  }
+  
+  /**
+   * (getter/setter) indicates whether the user's mouse is down on the resize
+   * button. this simply provides a hard case boolean for this value.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set mouseDownResize(value) {
+    this._mouseDownResize = value === true;
+  }
+  get mouseDownResize() {
+    return this._mouseDownResize === true;
+  }
+}
+
+/*
+ * The button names to use
+ * @constant
+ * @type {string}
+*/
+Sticker.BUTTON_DELETE_NAME = 'button_delete';
+/*
+ * @constant
+ * @type {string}
+*/
+Sticker.BUTTON_RESIZE_NAME = 'button_resize';
+
+/*
+ * The button types. Mainly used for positioning.
+ * @constant
+ * @type {number}
+*/
+Sticker.BUTTON_DELETE = 0;
+/*
+ * @constant
+ * @type {number}
+*/
+Sticker.BUTTON_RESIZE = 1;
+
+export default Sticker;

@@ -1,0 +1,13 @@
+{
+  "name": "wtc-sticker-book",
+  "version": "0.1.0",
+  "description": "Stickerbook is a pixi application that provides 2D scene layout functionality.",
+  "main": "index.js",
+  "repository": "git@github.com:wethegit/wtc-sticker-book.git",
+  "author": "Liam Egan <liam@wethecollective.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "pixi.js": "^4.8.2"
+  }
+}
