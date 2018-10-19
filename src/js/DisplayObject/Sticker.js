@@ -23,12 +23,12 @@ const pauseEvent = (e)=> {
  */
 class Sticker extends PIXI.Container {
   
-	/**
-	 * The Sticker Class constructor. Takes a texture object and creates the sticker.
-	 *
-	 * @constructor
-	 * @param {PIXI.Texture} texture 				The texture object to use to create the sticker
-	 */
+  /**
+   * The Sticker Class constructor. Takes a texture object and creates the sticker.
+   *
+   * @constructor
+   * @param {PIXI.Texture} texture         The texture object to use to create the sticker
+   */
   constructor(texture) {
     super();
     
@@ -138,15 +138,15 @@ class Sticker extends PIXI.Container {
    * Public methods
    */
   
-	/**
-	 * This sets the dimensions of the stage and sets up the ratio 
+  /**
+   * This sets the dimensions of the stage and sets up the ratio 
    * object for future use.
-	 *
-	 * @public
+   *
+   * @public
    * @param {number} w    The width of the stage
    * @param {number} h    The height of the stage
-	 * @return null
-	 */
+   * @return null
+   */
   setDimensions(w, h) {
     if(w > h) {
       this.diameter = h;
@@ -161,13 +161,13 @@ class Sticker extends PIXI.Container {
     return;
   }
   
-	/**
-	 * Set up the indicator graphics. We put this in a function in case we need to update it later on.
+  /**
+   * Set up the indicator graphics. We put this in a function in case we need to update it later on.
    * @todo add removal of old graphics, if they exist
-	 *
-	 * @public
-	 * @return null
-	 */
+   *
+   * @public
+   * @return null
+   */
   setIndicatorGraphics() {
     let radius = this.radius * this.indicatorScale;
 
@@ -176,13 +176,13 @@ class Sticker extends PIXI.Container {
     this.indicator.drawCircle(0, 0, radius);
   }
   
-	/**
-	 * Create a button object from a provided texture, or else create a placeholder
-	 *
-	 * @public
+  /**
+   * Create a button object from a provided texture, or else create a placeholder
+   *
+   * @public
    * @param {PIXI.Texture} texture    The texture to use to create the button
-	 * @return null
-	 */
+   * @return null
+   */
   createButton(texture) {
     let button;
     if(texture) {
@@ -203,16 +203,16 @@ class Sticker extends PIXI.Container {
     return button;
   }
   
-	/**
-	 * Set the cartesian position of a button based on its type and the radius of the sticker.
+  /**
+   * Set the cartesian position of a button based on its type and the radius of the sticker.
    * Because sticker size is measured in radial coordinates, we translate the position of 
    * the buttons from an angle, this means that buttons fluidly move out and in when scaling.
-	 *
-	 * @public
+   *
+   * @public
    * @param {PIXI.Container} buttonInstance     The button instance to position
    * @param {number} buttonType                 The constant indicator of the button to position.
-	 * @return null
-	 */
+   * @return null
+   */
   setButtonPosition(buttonInstance, buttonType) {
     if(buttonInstance instanceof PIXI.Container) {
       let radPos;
@@ -234,13 +234,13 @@ class Sticker extends PIXI.Container {
     }
   }
   
-	/**
-	 * This method focusses the sticker, making it active and firing a sticker-focus
+  /**
+   * This method focusses the sticker, making it active and firing a sticker-focus
    * event that should remove the focus all other on-stage elements
-	 *
-	 * @public
-	 * @return null
-	 */
+   *
+   * @public
+   * @return null
+   */
   focus() {
     if(this.hasFocus === true) return;
     
@@ -268,13 +268,13 @@ class Sticker extends PIXI.Container {
     this.buttonResize.interactive = true;
   }
   
-	/**
-	 * This method unfocusses the sticker, making it active and firing a sticker-unfocussed
+  /**
+   * This method unfocusses the sticker, making it active and firing a sticker-unfocussed
    * event.
-	 *
-	 * @public
-	 * @return null
-	 */
+   *
+   * @public
+   * @return null
+   */
   unfocus() {
     if(this.hasFocus === false) return;
     
@@ -302,25 +302,25 @@ class Sticker extends PIXI.Container {
     this.buttonResize.interactive = false;
   }
   
-	/**
-	 * This method detects whether the sticker should be destroyed by testing whether it has 
+  /**
+   * This method detects whether the sticker should be destroyed by testing whether it has 
    * a parent element.
-	 *
-	 * @public
-	 * @return null
-	 */
+   *
+   * @public
+   * @return null
+   */
   detectDestroy() {
     if(this.parent === null) {
       this.destroy();
     }
   }
   
-	/**
-	 * This method destroys the sticker and removes all memory-traces of it.
-	 *
-	 * @public
-	 * @return null
-	 */
+  /**
+   * This method destroys the sticker and removes all memory-traces of it.
+   *
+   * @public
+   * @return null
+   */
   destroy() {
     super.destroy();
     
@@ -332,14 +332,14 @@ class Sticker extends PIXI.Container {
    * Event callbacks
    */
   
-	/**
-	 * Reacts to mouse move on the sticker itself. Responsible for positioning the sticker based
+  /**
+   * Reacts to mouse move on the sticker itself. Responsible for positioning the sticker based
    * on dragging
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onMouseMove(e) {
     if(this.mouseDown === true) {
       this.mousePosition = e.data.getLocalPosition(this.parent);
@@ -363,14 +363,14 @@ class Sticker extends PIXI.Container {
       pauseEvent(e);
     }
   }
-	/**
-	 * Reacts to mouse down on the sticker itself. Responsible for focussing and setting up
+  /**
+   * Reacts to mouse down on the sticker itself. Responsible for focussing and setting up
    * variable for use by mouse movement (dragging)
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onMouseDown(e) {
     this.clickFocus = true;
     
@@ -390,144 +390,144 @@ class Sticker extends PIXI.Container {
       
     pauseEvent(e);
   }
-	/**
-	 * Reacts to mouse up on the sticker. All this is here for is to provide a way to
+  /**
+   * Reacts to mouse up on the sticker. All this is here for is to provide a way to
    * escape from dragging.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onMouseUp(e) {
     this.mouseDown = false;
   }
-	/**
-	 * @todo
-	 *
-	 * @public
+  /**
+   * @todo
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onKeyPress(e) {
     
   }
-	/**
-	 * @todo
-	 *
-	 * @public
+  /**
+   * @todo
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onKeyUp(e) {
     
   }
-	/**
-	 * @todo
-	 *
-	 * @public
+  /**
+   * @todo
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onDeleted(target) {
     this.detectDestroy();
   }
-	/**
-	 * Responds to the custom focus event. If the target passed by the vent is
+  /**
+   * Responds to the custom focus event. If the target passed by the vent is
    * not *this* then we unfocus this sticker.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} target     The target of the focus.
-	 * @return null
-	 */
+   * @return null
+   */
   onFocus(target) {
     if(target !== this) {
       this.unfocus();
     }
   }
-	/**
-	 * Responds to the custom unfocus event which is fired from a higher-level
+  /**
+   * Responds to the custom unfocus event which is fired from a higher-level
    * object. If the sticker has just been clicked on (*clickFocus*) then
    * we do nothing.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} target     The target of the focus.
-	 * @return null
-	 */
+   * @return null
+   */
   onUnFocus(target) {
     if(this.clickFocus === false) this.unfocus();
     this.clickFocus = false;
   }
-	/**
-	 * @todo
-	 *
-	 * @public
+  /**
+   * @todo
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onDisable(target) {
     this.unfocus();
     this.disable();
     this.clickFocus = false;
   }
-	/**
-	 * @todo
-	 *
-	 * @public
+  /**
+   * @todo
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onEnable(target) {
     this.enable();
   }
-	/**
-	 * Responds to the delete event fired from the delet button or elsewhere.
+  /**
+   * Responds to the delete event fired from the delet button or elsewhere.
    * This deletes the target from the PIXI object model and destroys itself.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object, normally from click
-	 * @return null
-	 */
+   * @return null
+   */
   onDelete(e) {
     this.parent.removeChild(this);
     this.destroy();
   }
-	/**
-	 * Responds to the mouse down event on the resize button. This sets up the state
+  /**
+   * Responds to the mouse down event on the resize button. This sets up the state
    * that provides the functionality for the resize actions.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onMouseDownResize(e) {
     this.clickFocus = true;
     this.mouseDownResize = true;
     
     pauseEvent(e);
   }
-	/**
-	 * Responds to the mouse up event on the resize button. This stops the resize action
+  /**
+   * Responds to the mouse up event on the resize button. This stops the resize action
    * and settles the state of the sticker back into its dormant state.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onMouseUpResize(e) {
     this.mouseDownResize = false;
     
     this.baseRotation = this.stickerRotation;
     this.setButtonPosition(this.buttonResize, Sticker.BUTTON_RESIZE);
   }
-	/**
-	 * Responds to the mouse move event on the resize button. This method finds the 
+  /**
+   * Responds to the mouse move event on the resize button. This method finds the 
    * relative mouse position, generates polar coordinates from it, and resizes
    * and rotates the sticker based on these polars.
-	 *
-	 * @public
+   *
+   * @public
    * @param {Object} e     The event object
-	 * @return null
-	 */
+   * @return null
+   */
   onMouseMoveResize(e) {
     if(this.mouseDownResize === true) {
       let mousepos = e.data.getLocalPosition(this.parent);

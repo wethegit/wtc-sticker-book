@@ -16,14 +16,14 @@ window.resources = resources;
  */
 class Stage {
   
-	/**
-	 * The Stage Class constructor
-	 *
-	 * @constructor
-	 * @param {number}      w 				        The width coord
-	 * @param {number}      h 				        The height coord
-	 * @param {HTMLElement} container 				The HTML element that wull contain the PIXI stage element
-	 */
+  /**
+   * The Stage Class constructor
+   *
+   * @constructor
+   * @param {number}      w                 The width coord
+   * @param {number}      h                 The height coord
+   * @param {HTMLElement} container         The HTML element that wull contain the PIXI stage element
+   */
   constructor(w, h, container) {
     this.app = new PIXI.Application(w, h, {backgroundColor : 0x666666});
     
@@ -119,26 +119,26 @@ class Stage {
     this.initialised = true;
   }
   
-	/**
-	 * This destroys the stage, this should be fired whenever you need to
+  /**
+   * This destroys the stage, this should be fired whenever you need to
    * remove the stage and get rid of any memory traces of it. For example
    * when changing a page on an ajax site or whatever.
-	 *
-	 * @public
-	 * @return null
-	 */
+   *
+   * @public
+   * @return null
+   */
   destroy() {
     // @todo add more destruction here.
     // Remove all relevant event listeners
     window.removeEventListener('pointerdown', this.onClick);
   }
   
-	/**
-	 * This resets the application, setting up all of the basic components
-	 *
-	 * @public
-	 * @return null
-	 */
+  /**
+   * This resets the application, setting up all of the basic components
+   *
+   * @public
+   * @return null
+   */
   reset() {
     this.stage = new PIXI.Container();
     this.bg = new PIXI.Container();
@@ -147,23 +147,23 @@ class Stage {
     
     this.stage.addChild(this.bg);
   }
-	/**
-	 * This sets the viewport dimentsions
-	 *
-	 * @public
+  /**
+   * This sets the viewport dimentsions
+   *
+   * @public
    * @param {string} value              A string representing the identifier of the sprite image loaded into the pixi loader
-	 * @return null
-	 */
-	/**
-	 * This adds a sticker to the stage
-	 *
-	 * @public
+   * @return null
+   */
+  /**
+   * This adds a sticker to the stage
+   *
+   * @public
    * @param {string} value              A string representing the identifier of the sprite image loaded into the pixi loader
    * @param {object} [position=null]    The pre-set position of the sticker
    * @param {number} [rotation=0]       The pre-set rotation of the sticker
    * @param {number} [radius=130]       The pre-set radius of the sticker
-	 * @return null
-	 */
+   * @return null
+   */
   addSticker(value, position = null, rotation = 0, radius = 130) {
     if(!resources[value]) return;
     
@@ -212,8 +212,8 @@ class Stage {
   /**
    * This is the callback for the animation frame.
    *
-	 * @private
-	 * @param {number} delta    The delta as passed by requestAnimationFrame
+   * @private
+   * @param {number} delta    The delta as passed by requestAnimationFrame
    */
   _render(delta) {
     if(this.rendering) {
