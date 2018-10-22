@@ -10,6 +10,7 @@ window.resources = resources;
  * A class that provides a stage for the WTC Stickerbook
  *
  * @class Stage
+ * @module Application
  * @author Liam Egan <liam@wethecollective.com>
  * @version 0.1.0
  * @created Oct 17, 2018

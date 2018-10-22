@@ -2,64 +2,6 @@ import Stage from '../application/Stage';
 import eventListener from '../application/Events';
 import { resources } from '../application/Preloader';
 
-/**
- * Sticker add event. Fired when a sticker is finishing initialising
- *
- * @event sticker-added
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being added (this)
- */
-/**
- * Sticker focus event. Fired when the sticker is focussed for whatever readon
- *
- * @event sticker-focus
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being focussed (this)
- */
-/**
- * Sticker unfocussed event. Fired when the sticker is un-focussed for whatever readon
- *
- * @event sticker-unfocussed
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being focussed (this)
- */
-/**
- * Sticker mouse move event. Fired when the mouse or finder moves over a sticker
- *
- * @event sticker-dragged
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being added (this)
- * @property {object} mousePosition - the position of the mouse within the sticker
- * @property {object} oldPosition - the old (previous) position of the sticker itself
- * @property {object} position - the current position of the sticker itself
- */
-/**
- * Sticker resize event. Fired when a sticker is resized and / or rotated
- *
- * @event sticker-resized
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being resized (this)
- * @property {number} radius - The new radius of the modified object
- * @property {number} rotation - The new rotation of the modified object
- */
-/**
- * Sticker focus event. Fired when a sticker receives focus somehow
- *
- * @event sticker-dragged
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being focussed (this)
- */
-/**
- * Sticker unfocus event. Fired when a sticker loses focus via a focus event
- *
- * @event sticker-dragged
- * @type {object}
- * @property {object} sticker - The object representation of the sticker being unfocussed (this)
- */
-
-
-
-
 // This just allows us to pass in an event object and pause / cancel it.
 const pauseEvent = (e)=> {
   if(e.stopPropagation) e.stopPropagation();
@@ -74,6 +16,7 @@ const pauseEvent = (e)=> {
  * functionality for the sticker book.
  *
  * @class Sticker
+ * @module DisplayObject
  * @augments PIXI.Container
  * @author Liam Egan <liam@wethecollective.com>
  * @version 0.1.0
@@ -182,7 +125,11 @@ class Sticker extends PIXI.Container {
     
     
     /**
+     * Sticker add event. Fired when a sticker is finishing initialising
+     *
      * @event sticker-added
+     * @type {object}
+     * @property {object} sticker - The object representation of the sticker being added (this)
      */
     eventListener.emitEvent('sticker-added', [this]);
   }
@@ -301,7 +248,11 @@ class Sticker extends PIXI.Container {
     this.hasFocus = true;
     
     /**
+     * Sticker focus event. Fired when the sticker is focussed for whatever readon
+     *
      * @event sticker-focus
+     * @type {object}
+     * @property {object} sticker - The object representation of the sticker being focussed (this)
      */
     eventListener.emitEvent('sticker-focus', [this]);
     
@@ -331,7 +282,11 @@ class Sticker extends PIXI.Container {
     this.hasFocus = false;
     
     /**
+     * Sticker unfocussed event. Fired when the sticker is un-focussed for whatever readon
+     *
      * @event sticker-unfocussed
+     * @type {object}
+     * @property {object} sticker - The object representation of the sticker being focussed (this)
      */
     eventListener.emitEvent('sticker-unfocussed', [this]);
     
@@ -395,7 +350,14 @@ class Sticker extends PIXI.Container {
       this.position.y = this.mousePosition.y + this.offsetPosition.y;
       
       /**
+       * Sticker mouse move event. Fired when the mouse or finder moves over a sticker
+       *
        * @event sticker-dragged
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being added (this)
+       * @property {object} mousePosition - the position of the mouse within the sticker
+       * @property {object} oldPosition - the old (previous) position of the sticker itself
+       * @property {object} position - the current position of the sticker itself
        */
       eventListener.emitEvent('sticker-dragged', [this, this.mousePosition, oldPosition, this.position]);
       
@@ -594,7 +556,13 @@ class Sticker extends PIXI.Container {
       this.buttonResize.position.y = Math.sin(polar.phi) * radius;
       
       /**
+       * Sticker resize event. Fired when a sticker is resized and / or rotated
+       *
        * @event sticker-resized
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being resized (this)
+       * @property {number} radius - The new radius of the modified object
+       * @property {number} rotation - The new rotation of the modified object
        */
       eventListener.emitEvent('sticker-resize', [this, this.rotation, this.radius]);
       
@@ -899,7 +867,11 @@ class Sticker extends PIXI.Container {
   set focussed(value) {
     if(value === true && this.focussed !== true) {
       /**
+       * Sticker focus event. Fired when a sticker receives focus somehow
+       *
        * @event sticker-dragged
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being focussed (this)
        */
       eventListener.emitEvent('sticker-focus', [this]);
       
@@ -917,7 +889,11 @@ class Sticker extends PIXI.Container {
       this._focussed = true;
     } else if(this.focussed === true) {
       /**
+       * Sticker unfocus event. Fired when a sticker loses focus via a focus event
+       *
        * @event sticker-dragged
+       * @type {object}
+       * @property {object} sticker - The object representation of the sticker being unfocussed (this)
        */
       eventListener.emitEvent('sticker-unfocus', [this]);
       this.indicator.alpha = 0;
