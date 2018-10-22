@@ -9,5 +9,8 @@
   "private": false,
   "dependencies": {
     "pixi.js": "^4.8.2"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.5.5"
   }
 }
