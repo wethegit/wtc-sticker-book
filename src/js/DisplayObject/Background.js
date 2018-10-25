@@ -47,12 +47,14 @@ class Background extends PIXI.extras.TilingSprite {
    * a parent element.
    *
    * @public
-   * @return null
+   * @return boolean  Whether or not this element has been destroyed in the process of doing this
    */
   detectDestroy() {
     if(this.parent === null) {
       this.destroy();
+      return true;
     }
+    return false;
   }
   
   /**
@@ -85,7 +87,9 @@ class Background extends PIXI.extras.TilingSprite {
    * @return null
    */
   onStageResize(width, height) {
-    this.detectDestroy();
+    const destroyed = this.detectDestroy();
+    
+    if(destroyed) return;
     
     let textureRatio = this.texture.width / this.texture.height;
     let stageRatio = width / height;
