@@ -1,15 +1,6 @@
 import Stage from '../application/Stage';
-import eventListener from '../application/Events';
+import { default as eventListener, pauseEvent } from '../application/Events';
 import { resources } from '../application/Preloader';
-
-// This just allows us to pass in an event object and pause / cancel it.
-const pauseEvent = (e)=> {
-  if(e.stopPropagation) e.stopPropagation();
-  if(e.preventDefault) e.preventDefault();
-  e.cancelBubble=true;
-  e.returnValue=false;
-  return false;
-}
 
 /**
  * This class provides an extension of the PIXI container that provides specialised 
@@ -33,6 +24,8 @@ class Sticker extends PIXI.Container {
   constructor(texture) {
     super();
     
+    this.spriteContainer = new PIXI.Container();
+    
     // Bind any necessary listeners
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
@@ -50,8 +43,7 @@ class Sticker extends PIXI.Container {
     
     this.texture = texture; // Add some testing here for this and throw an error if it fails
     
-    this.sprite = new PIXI.Sprite(this.texture);
-    this.setDimensions(this.sprite.width, this.sprite.height);
+    this.createSprite();
     
     // Set up the indicator
     this.indicator = new PIXI.Graphics();
@@ -90,22 +82,6 @@ class Sticker extends PIXI.Container {
     this.buttonResize.on('mousemove', this.onMouseMoveResize);
     this.buttonResize.on('touchmove', this.onMouseMoveResize);
     
-    // Set up self interactivity
-    this.interactive = true;
-    this.sprite.interactive = true;
-    this.sprite.on('mouseover', (e) => {
-      document.body.style.cursor = 'all-scroll';
-    });
-    this.sprite.on('mouseout', (e) => {
-      document.body.style.cursor = 'default';
-    });
-    this.sprite.on('mousemove', this.onMouseMove);
-    this.sprite.on('touchmove', this.onMouseMove);
-    this.sprite.on('mousedown', this.onMouseDown);
-    this.sprite.on('touchstart', this.onMouseDown);
-    this.sprite.on('mouseup', this.onMouseUp);
-    this.sprite.on('touchend', this.onMouseUp);
-    
     // And custom events
     // this.onDeleted = this.onDeleted.bind(this);
     // this.onFocus = this.onFocus.bind(this);
@@ -117,7 +93,7 @@ class Sticker extends PIXI.Container {
     
     // Add everything to the container
     this.addChild(this.indicator);
-    this.addChild(this.sprite);
+    this.addChild(this.spriteContainer);
     this.addChild(this.buttonDelete);
     this.addChild(this.buttonResize);
     
@@ -138,6 +114,19 @@ class Sticker extends PIXI.Container {
   /**
    * Public methods
    */
+  /**
+   * This creates the sprite. In a regular sticker this is a 
+   * simple process of just creating a sprite fromt the
+   * provided texture, but in subclasses we may want other 
+   * things, like rendering text or whatever.
+   *
+   * @public
+   * @return null
+   */
+  createSprite() {
+    this.sprite = new PIXI.Sprite(this.texture);
+    this.setDimensions(this.sprite.width, this.sprite.height);
+  }
   
   /**
    * This sets the dimensions of the stage and sets up the ratio 
@@ -327,6 +316,7 @@ class Sticker extends PIXI.Container {
     
     // Removing external event listeners
     eventListener.off('sticker-focus', this.onFocus);
+    eventListener.off('sticker-unfocus', this.onUnFocus);
   }
   
   /**
@@ -581,7 +571,7 @@ class Sticker extends PIXI.Container {
    * sticker when focussed
    *
    * @type {number}
-   * @default 0x00c6ff
+   * @default 0xEEEEEE
    */
   set helperColour(value) {
     if(!isNaN(value)) {
@@ -589,7 +579,7 @@ class Sticker extends PIXI.Container {
     }
   }
   get helperColour() {
-    return this._helperColour || 0x00c6ff;
+    return this._helperColour || 0xEEEEEE;
   }
   
   /**
@@ -742,6 +732,24 @@ class Sticker extends PIXI.Container {
       this._sprite = value;
       this._sprite.anchor.x = .5;
       this._sprite.anchor.y = .5;
+      
+      // Set up self interactivity
+      this.interactive = true;
+      this.sprite.interactive = true;
+      this.sprite.on('mouseover', (e) => {
+        document.body.style.cursor = 'all-scroll';
+      });
+      this.sprite.on('mouseout', (e) => {
+        document.body.style.cursor = 'default';
+      });
+      this.sprite.on('mousemove', this.onMouseMove);
+      this.sprite.on('touchmove', this.onMouseMove);
+      this.sprite.on('mousedown', this.onMouseDown);
+      this.sprite.on('touchstart', this.onMouseDown);
+      this.sprite.on('mouseup', this.onMouseUp);
+      this.sprite.on('touchend', this.onMouseUp);
+      
+      this.spriteContainer.addChild(this.sprite);
     }
   }
   get sprite() {
@@ -834,6 +842,7 @@ class Sticker extends PIXI.Container {
    * @default diameter * .5 + 20
    */
   set radius(value) {
+    console.log(value)
     if(!isNaN(value)) {
       this._radius = value;
       
@@ -1031,6 +1040,32 @@ class Sticker extends PIXI.Container {
   }
   get mouseDownResize() {
     return this._mouseDownResize === true;
+  }
+  
+  /**
+   * (getter) the sticker type.
+   *
+   * @readonly
+   * @type {string}
+   */
+  get stickerType() {
+    return 'basic-sticker';
+  }
+  /**
+   * (getter) the object representation of this sticker.
+   *
+   * @readonly
+   * @type {object}
+   */
+  get definition() {
+    const output = {
+      type: this.stickerType,
+      texture_id: this.texture.textureCacheIds[0],
+      radius: this.radius,
+      position: { x: this.position.x, y: this.position.y },
+      rotation: this.stickerRotation
+    }
+    return output;
   }
 }
 
