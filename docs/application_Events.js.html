@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: application/Events.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,75 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: application/Events.js</h1>
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const eventListener = new EventEmitter();
 
+// This just allows us to pass in an event object and pause / cancel it.
+const pauseEvent = (e)=> {
+  if(e.stopPropagation) e.stopPropagation();
+  if(e.preventDefault) e.preventDefault();
+  e.cancelBubble=true;
+  e.returnValue=false;
+  return false;
+}
 
-    <h3> </h3>
+/**
+ * @module Application
+ */
+/**
+ * Casts a resize event cast from to the application.
+ *
+ * @event viewport-resize
+ * @type {object}
+ * @property {number} width - The width to resize the viewport to
+ * @property {number} height - The height to resize the viewport to
+ */
+/**
+ * Casts a set background event and sets the background with the value provided.
+ *
+ * @event set-background
+ * @type {object}
+ * @property {String|PIXI:Container} value - The background element to add.
+ */
+/**
+ * Casts a add sticker event and sets the background with the value provided.
+ * can operate with either a texture identifier or a sticker object.
+ *
+ * @event add-sticker
+ * @type {object}
+ * @property {String|PIXI:Container} value - The sticker element to add.
+ */
+/**
+ * Casts the drop sticker event and adds the specified sticker.
+ * NB: The position values should be normalised to the canvas PRIOR
+ * to being sent to this listener.
+ * This can be done using something like:
+ * ```
+    offset = $(@canvas).offset()
+    left = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+    top = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
 
+    adjustedGlobalPosition = {x: position.x - offset.left + left, y: position.y - offset.top + top}
+   ```
+ *
+ *
+ * @event add-sticker
+ * @type {object}
+ * @property {DisplayObject:Sticker} value - The sticker element to add.
+ * @property {Object} position - the position of the dropped sticker on the canvas
+ */
 
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+export { eventListener as default, pauseEvent };</code></pre>
+        </article>
+    </section>
 
 
 
