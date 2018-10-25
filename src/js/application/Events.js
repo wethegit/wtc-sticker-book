@@ -13,7 +13,14 @@ const pauseEvent = (e)=> {
  * @module Application
  */
 /**
- * Casts a resize event cast from to the application.
+ * Casts a reset event to the application. Used to clear the canvas
+ * and start over.
+ *
+ * @event stage-reset
+ * @type {object}
+ */
+/**
+ * Casts a resize event to the application.
  *
  * @event viewport-resize
  * @type {object}

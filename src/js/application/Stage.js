@@ -62,6 +62,16 @@ class Stage {
      * @todo Document all of these events in the Events container
      */
     /**
+     * Listens for the reset event.
+     *
+     * @method
+     * @param {DisplayObject:Sticker} value - The sticker element to add.
+     * @listens Events:add-sticker
+     */
+    eventListener.addListener('stage-reset', (value) => {
+      this.reset();
+    });
+    /**
      * Listens for a resize event cast from an unspecified location.
      *
      * @method
