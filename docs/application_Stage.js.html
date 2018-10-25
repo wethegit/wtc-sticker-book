@@ -28,6 +28,7 @@
         <article>
             <pre class="prettyprint source linenums"><code>
 import Sticker from '../DisplayObject/Sticker';
+import Background from '../DisplayObject/Background';
 import eventListener from './Events';
 import { easeOutExpo } from '../utility/Easing';
 import { resources } from './Preloader';
@@ -97,7 +98,8 @@ class Stage {
      * @listens Events:viewport-resize
      */
     eventListener.addListener('viewport-resize', (width, height) => {
-      this.setViewportDimensions(width, height);
+      // this.setViewportDimensions(width, height);
+      this.dimensions = {x: width, y: height};
     });
     /**
      * Listens for a set background event cast from an unspecified location
@@ -108,8 +110,8 @@ class Stage {
      * @param {number} type - The type of the background, can be scene or tiling.
      * @listens Events:set-background
      */
-    eventListener.addListener('set-background', (value, type) => {
-      this.setBackground(value, type);
+    eventListener.addListener('set-background', (value) => {
+      this.setBackground(value);
     });
     /**
      * Listens for the addSticker event and adds the specified sticker.
@@ -119,8 +121,6 @@ class Stage {
      * @listens Events:add-sticker
      */
     eventListener.addListener('add-sticker', (value) => {
-      console.log('adding sticker')
-      console.log(value)
       this.addSticker(value);
     });
     /**
@@ -173,28 +173,47 @@ class Stage {
     this.bg = new PIXI.Container();
     this.foreground = new PIXI.Container();
     this.cardRear = new PIXI.Container();
-    
-    this.stage.addChild(this.bg);
   }
   /**
-   * This sets the viewport dimentsions
+   * This adds a sticker to a specific location on the stage. This is
+   * distinct from the addSticker insofar as it takes a position and
+   * massages it to conform with local space.
    *
    * @public
-   * @param {string} value              A string representing the identifier of the sprite image loaded into the pixi loader
-   * @return null
+   * @param {string|Sticker} value        A string representing the identifier of the sprite image loaded into the pixi loader, *OR* a Sticker itself
+   * @param {object} position             The position of the dropped sticker.
    */
+  dropSticker(value, position) {
+    if( !resources[value] &amp;&amp; !(value instanceof Sticker) ) return;
+    window.app = this.app
+    let offset = this.app.view.getBoundingClientRect();
+    offset = {
+      top: offset.top + document.body.scrollTop,
+      left: offset.left + document.body.scrollLeft
+    }
+    
+    const adjustedGlobalPosition = {
+      x: position.x - offset.left, 
+      y: position.y - offset.top };
+    const adjustedCanvasPosition = {
+      x: adjustedGlobalPosition.x / this.stageRatio, 
+      y: adjustedGlobalPosition.y / this.stageRatio };
+    this.addSticker(value, adjustedCanvasPosition);
+  }
   /**
    * This adds a sticker to the stage
    *
    * @public
-   * @param {string} value              A string representing the identifier of the sprite image loaded into the pixi loader
+   * @param {string|Sticker} value              A string representing the identifier of the sprite image loaded into the pixi loader, *OR* a Sticker itself
    * @param {object} [position=null]    The pre-set position of the sticker
    * @param {number} [rotation=0]       The pre-set rotation of the sticker
    * @param {number} [radius=130]       The pre-set radius of the sticker
    * @return null
    */
   addSticker(value, position = null, rotation = 0, radius = 130) {
-    if(!resources[value]) return;
+    if( !resources[value] &amp;&amp; !(value instanceof Sticker) ) return;
+    
+    let sprite;
     
     // create the settings object
     let settings = {
@@ -207,14 +226,27 @@ class Stage {
     };
     
     // set up the sticker
-    let texture = resources[value].texture;
-    let sprite = new Sticker(texture);
+    if(value instanceof Sticker) {
+      sprite = value;
+    } else {
+      let texture = resources[value].texture;
+      sprite = new Sticker(texture);
+    }
     
     // set position, radius and rotation
     sprite.position.x = settings.position.x;
     sprite.position.y = settings.position.y;
     sprite.radius = settings.radius;
     sprite.stickerRotation = settings.rotation;
+    
+    // If the added sticker is larger than the stage, then we want to scale it down.
+    if(sprite.w > this.dimensions.x) {
+      const ratio = sprite.ratio;
+      const tw = this.dimensions.x / sprite.w * 100; // This is the percentage difference between the stage width and the sticker width
+      const trad = sprite.radius / 100 * tw; // Now modify the sprite's radius by that difference
+      
+      sprite.radius = trad;
+    }
     
     // This just runs a small transition across the sprite, making it scale up and fade in from 0
     sprite.alpha = 0;
@@ -232,6 +264,72 @@ class Stage {
     requestAnimationFrame(tweener);
     
     this.foreground.addChild(sprite);
+    
+    sprite.focus();
+  }
+  /**
+   * This adds a background. Backgrounds are always singular, so adding a 
+   * new background will also remove the old one.
+   * One new thing added here is that all backgrounds are tiling, this
+   * makes certain that all backgrounds are usable at all possible
+   * resolutions. We tile out from the centre.
+   *
+   * @public
+   * @param {string|PIXI.Container} value              A string representing the identifier of the sprite image loaded into the pixi loader, *OR* a Container itself
+   * @return void
+   */
+  setBackground(value) {
+    this.background = value;
+    
+    // Clear out the other children (there can only be one background at a time)
+    if(this.bg) {
+      this.bg.children.forEach((child) => {
+        this.bg.removeChild(child);
+      });
+    }
+    
+    if(value === Stage.BG_CLEAR) {
+      return;
+    }
+    if( !resources[value] &amp;&amp; !(value instanceof PIXI.Container) ) return;
+    
+    let backgroundSprite;
+    
+    if(resources[value]) {
+      let texture = resources[value].texture;
+      backgroundSprite = new Background(texture, this.dimensions.x, this.dimensions.y);
+    } else {
+      
+    }
+    
+    if(this.bg) {
+      this.bg.addChild(backgroundSprite);
+    }
+  }
+  /**
+   * This outputs the scene for use as a data object. Mainly the use
+   * for this is to generate pre-populated scenes, but it could also
+   * be used to allow the user to share their scene.
+   *
+   * @public
+   * @param {string} format
+   * @return {object|string}   A representation of the scene, for consumption by an instance of the Sticker book
+   */
+  outputScene(format = 'json') {
+    let output = {
+      background: null,
+      stickers: []
+    };
+    this.foreground.children.forEach((sticker) => {
+      console.log(sticker, sticker.definition);
+      output.stickers.push(sticker.definition);
+    });
+    
+    if(format === 'json') {
+      return JSON.stringify(output);
+    }
+    
+    return output;
   }
   
   
@@ -258,7 +356,7 @@ class Stage {
      * On click event. This is when you click anywhere in the window and will just
      * send an unfocus event to all relevant sub elements.
      *
-     * @event sticker-added
+     * @event sticker-unfocus
      * @type {object}
      */
     setTimeout(()=> eventListener.emitEvent('sticker-unfocus', [this]), 10);
@@ -367,6 +465,22 @@ class Stage {
     return this._bg || null;
   }
   /**
+   * (getter/setter) the background identifier. This is the 
+   * string or constant that identifies how to draw the
+   * sticker book's background.
+   *
+   * @type {string|int}
+   * @default {Stage.BG_CLEAR}
+   */
+  set background(value) {
+    if(typeof value === 'string' || value === Stage.BG_CLEAR) {
+      this._background = value;
+    }
+  }
+  get background() {
+    return this._background || Stage.BG_CLEAR;
+  }
+  /**
    * (getter/setter) Add the foreground instance and remove any
    * already existing stage elements
    *
@@ -418,6 +532,14 @@ class Stage {
       this._dimensions = value;
       this.stageRatio = value.x / value.y;
       this.app.renderer.resize(value.x * this.pxAspect, value.y * this.pxAspect);
+      /**
+       * The stage resize event. Fired whenever the dimensions of the stage
+       * are reset.
+       *
+       * @event stage-resize
+       * @type {object}
+       */
+      eventListener.emitEvent('stage-resize', [value.x, value.y]);
     }
   }
   get dimensions() {
@@ -453,8 +575,7 @@ class Stage {
   }
 }
 
-Stage.BG_TYPE_SCENE = 0;
-Stage.BG_TYPE_TILE = 1;
+Stage.BG_CLEAR = 1;
 
 export default Stage;</code></pre>
         </article>
@@ -466,13 +587,13 @@ export default Stage;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Application.html">Application</a></li><li><a href="module-DisplayObject.html">DisplayObject</a></li></ul><h3>Classes</h3><ul><li><a href="module-Application-Stage.html">Stage</a></li><li><a href="module-DisplayObject-Sticker.html">Sticker</a></li></ul><h3>Events</h3><ul><li><a href="module-DisplayObject.html#~event:sticker-added">sticker-added</a></li><li><a href="module-DisplayObject.html#~event:sticker-dragged">sticker-dragged</a></li><li><a href="module-DisplayObject.html#~event:sticker-focus">sticker-focus</a></li><li><a href="module-DisplayObject.html#~event:sticker-resized">sticker-resized</a></li><li><a href="module-DisplayObject.html#~event:sticker-unfocussed">sticker-unfocussed</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Application.html">Application</a></li><li><a href="module-DisplayObject.html">DisplayObject</a></li></ul><h3>Classes</h3><ul><li><a href="module-Application-Stage.html">Stage</a></li><li><a href="module-DisplayObject-Background.html">Background</a></li><li><a href="module-DisplayObject-Sticker.html">Sticker</a></li><li><a href="module-DisplayObject-TextSticker.html">TextSticker</a></li></ul><h3>Events</h3><ul><li><a href="module-Application.html#~event:stage-resize">stage-resize</a></li><li><a href="module-DisplayObject.html#~event:sticker-added">sticker-added</a></li><li><a href="module-DisplayObject.html#~event:sticker-dragged">sticker-dragged</a></li><li><a href="module-DisplayObject.html#~event:sticker-focus">sticker-focus</a></li><li><a href="module-DisplayObject.html#~event:sticker-resized">sticker-resized</a></li><li><a href="module-Application.html#~event:sticker-unfocus">sticker-unfocus</a></li><li><a href="module-DisplayObject.html#~event:sticker-unfocussed">sticker-unfocussed</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Oct 22 2018 10:23:45 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Oct 25 2018 16:01:32 GMT-0700 (PDT)
 </footer>
 
 <script> prettyPrint(); </script>

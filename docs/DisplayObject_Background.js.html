@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: DisplayObject/Background.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: DisplayObject/Background.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import Stage from '../application/Stage';
+import { default as eventListener, pauseEvent } from '../application/Events';
+import { resources } from '../application/Preloader';
+
+/**
+ * This class provides an extension of the PIXI tiling sprite
+ * functionality for the sticker book.
+ *
+ * @class Background
+ * @module DisplayObject
+ * @augments PIXI.extras.TilingSprite
+ * @author Liam Egan &lt;liam@wethecollective.com>
+ * @version 0.1.0
+ * @created Oct 25, 2018
+ */
+class Background extends PIXI.extras.TilingSprite {
+  
+  /**
+   * The Background Class constructor. Takes a texture object and creates the tiling sprite (background).
+   *
+   * @constructor
+   * @param {PIXI.Texture} texture         The texture object to use to create the tiling background
+   * @param {number} width         The width of the stage
+   * @param {number} height         The height of the stage
+   */
+  constructor(texture, width, height) {
+    super(texture, width, height);
+    // super();
+    
+    this.anchor.x = .5;
+    this.anchor.y = .5;
+    
+    // Bind the listeners to the class
+    this.onStageResize = this.onStageResize.bind(this);
+    
+    eventListener.addListener('stage-resize', this.onStageResize);
+    
+    // Fire the resize event manually so that the container 
+    setTimeout(() => {
+      this.onStageResize(width, height);
+    }, 0);
+  }
+  
+  
+  /**
+   * This method detects whether the sticker should be destroyed by testing whether it has 
+   * a parent element.
+   *
+   * @public
+   * @return null
+   */
+  detectDestroy() {
+    if(this.parent === null) {
+      this.destroy();
+    }
+  }
+  
+  /**
+   * Public methods
+   */
+  /**
+   * This method destroys the sticker and removes all memory-traces of it.
+   *
+   * @public
+   * @return null
+   */
+  destroy() {
+    super.destroy();
+    
+    // Removing external event listeners
+    eventListener.off('stage-resize', this.onStageResize);
+  }
+  
+  
+  /**
+   * Event callbacks
+   */
+  
+  /**
+   * Reacts to the stage-resize event. Calculates the new size of the tiling background.
+   *
+   * @public
+   * @param {number} width     The new stage width
+   * @param {number} height     The new stage height
+   * @return null
+   */
+  onStageResize(width, height) {
+    this.detectDestroy();
+    
+    let textureRatio = this.texture.width / this.texture.height;
+    let stageRatio = width / height;
+    
+    this.width = width;
+    this.height = height;
+    
+    // If the texture size is greater than the stage size, then we need to scale it down
+    if(this.texture.width > width || this.texture.height > height) {
+      if(textureRatio > stageRatio) {
+        // cropping a landscape to a landscape OR
+        // a portrait to a portrait
+        // or landscape to a portrait
+        this.tileScale.y = this.height / this.texture.height;
+        this.tileScale.x = this.tileScale.y * textureRatio;
+
+        // cropPosition[1] = targetDimensions[1] / 2. - resizeDimensions[1] / 2.;
+        // cropPosition[0] = 0;
+      } else {
+        // cropping a portrait to a landscape
+        this.tileScale.x = this.width / this.texture.width;
+        this.tileScale.y = this.tileScale.x / textureRatio;
+
+        // cropPosition[1] = targetDimensions[1] / 2. - resizeDimensions[1] / 2.;
+        // cropPosition[0] = 0;
+      }
+    }
+    
+    this.position.x = width * .5;
+    this.position.y = height * .5;
+    
+  }
+}
+
+export default Background;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Application.html">Application</a></li><li><a href="module-DisplayObject.html">DisplayObject</a></li></ul><h3>Classes</h3><ul><li><a href="module-Application-Stage.html">Stage</a></li><li><a href="module-DisplayObject-Background.html">Background</a></li><li><a href="module-DisplayObject-Sticker.html">Sticker</a></li><li><a href="module-DisplayObject-TextSticker.html">TextSticker</a></li></ul><h3>Events</h3><ul><li><a href="module-Application.html#~event:stage-resize">stage-resize</a></li><li><a href="module-DisplayObject.html#~event:sticker-added">sticker-added</a></li><li><a href="module-DisplayObject.html#~event:sticker-dragged">sticker-dragged</a></li><li><a href="module-DisplayObject.html#~event:sticker-focus">sticker-focus</a></li><li><a href="module-DisplayObject.html#~event:sticker-resized">sticker-resized</a></li><li><a href="module-Application.html#~event:sticker-unfocus">sticker-unfocus</a></li><li><a href="module-DisplayObject.html#~event:sticker-unfocussed">sticker-unfocussed</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Oct 25 2018 16:01:32 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
