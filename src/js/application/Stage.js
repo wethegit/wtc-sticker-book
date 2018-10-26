@@ -1,5 +1,6 @@
 
 import Sticker from '../DisplayObject/Sticker';
+import TextSticker from '../DisplayObject/Text-Sticker';
 import Background from '../DisplayObject/Background';
 import eventListener from './Events';
 import { easeOutExpo } from '../utility/Easing';
@@ -66,7 +67,7 @@ class Stage {
      *
      * @method
      * @param {DisplayObject:Sticker} value - The sticker element to add.
-     * @listens Events:add-sticker
+     * @listens Events:stage-reset
      */
     eventListener.addListener('stage-reset', (value) => {
       this.reset();
@@ -104,6 +105,17 @@ class Stage {
      */
     eventListener.addListener('add-sticker', (value) => {
       this.addSticker(value);
+    });
+    /**
+     * Listens for the add scene event and attempts to parse the JSON 
+     * string into a scene
+     *
+     * @method
+     * @param {string} value - The JSON string representing the scene.
+     * @listens Events:add-scene
+     */
+    eventListener.addListener('add-scene', (value) => {
+      this.addScene(value);
     });
     /**
      * Listens for the drop sticker event and adds the specified sticker.
@@ -155,6 +167,58 @@ class Stage {
     this.bg = new PIXI.Container();
     this.foreground = new PIXI.Container();
     this.cardRear = new PIXI.Container();
+  }
+  /**
+   * This method takes a JSON string value and pases it into an object
+   * for creation of a scene. It attempts to find a background name
+   * (or constant) and an array of stickers.
+   * This JSON can be derrived in any way, but the strucure should be
+   * as follows:
+   *
+   * @public
+   * @param {string} value        A JSON string representing the scene
+   */
+  addScene(value) {
+    let data;
+    if(typeof value !== 'string') return;
+    // Try to parse the data
+    try {
+      data = JSON.parse(value);
+    } catch(error) {
+      // fail silently if the value fails to parse
+      return;
+    }
+    if(
+      !data.background ||
+      !data.stickers ||
+      (typeof data.background !== 'string' && typeof data.background !== 'number') ||
+      !(data.stickers instanceof Array)
+    )
+      return;
+    
+    // Clear our scene
+    this.reset();
+    
+    // Add our background
+    this.setBackground(data.background);
+    
+    data.stickers.forEach((sticker) => {
+      // Find the class based on the sticker type
+      let StickerClass = Stage.stickertypes[sticker.type];
+      // coerce the class parameters
+      let params = sticker.params;
+      // We always assume that the first paramater (if provided)
+      // is a texture reference, if that's the case, and it's 
+      // also valid, then we coerce the value into its
+      // associated texture.
+      if(resources[params[0]]) {
+        params[0] = resources[params[0]].texture;
+      }
+      // If the sticker class exists, then create the sticker and attach it to stage.
+      if(StickerClass) {
+        this.addSticker(new StickerClass(...params), sticker.position, sticker.rotation, sticker.radius);
+      }
+    });
   }
   /**
    * This adds a sticker to a specific location on the stage. This is
@@ -270,13 +334,14 @@ class Stage {
       });
     }
     
+    // If this a clear call, just return, at this point
     if(value === Stage.BG_CLEAR) {
       return;
     }
     if( !resources[value] && !(value instanceof PIXI.Container) ) return;
     
+    // create the background sprite
     let backgroundSprite;
-    
     if(resources[value]) {
       let texture = resources[value].texture;
       backgroundSprite = new Background(texture, this.dimensions.x, this.dimensions.y);
@@ -284,6 +349,7 @@ class Stage {
       
     }
     
+    // add it to the bg container
     if(this.bg) {
       this.bg.addChild(backgroundSprite);
     }
@@ -299,11 +365,10 @@ class Stage {
    */
   outputScene(format = 'json') {
     let output = {
-      background: null,
+      background: this.background,
       stickers: []
     };
     this.foreground.children.forEach((sticker) => {
-      console.log(sticker, sticker.definition);
       output.stickers.push(sticker.definition);
     });
     
@@ -312,6 +377,19 @@ class Stage {
     }
     
     return output;
+  }
+  /**
+   * This registeres a sticker type to an identifier. This just
+   * allows us to pass the data for different sticker types
+   *
+   * @public
+   * @param {DisplayObject.Sticker} sticker   The sticker to register 
+   */
+  static registerSticker(sticker) {
+    // Return if the provided is invalid for this operation
+    let img = new Image();
+    if( !(new sticker(new PIXI.BaseTexture(img)) instanceof Sticker) || !sticker.stickerType) return;
+    Stage.stickertypes[sticker.stickerType] = sticker;
   }
   
   
@@ -557,6 +635,13 @@ class Stage {
   }
 }
 
+Stage.stickertypes = [];
+
 Stage.BG_CLEAR = 1;
+
+Stage.registerSticker(Sticker);
+Stage.registerSticker(TextSticker);
+
+console.log(Stage.stickerypes);
 
 export default Stage;

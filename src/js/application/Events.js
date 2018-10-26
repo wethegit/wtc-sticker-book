@@ -43,6 +43,14 @@ const pauseEvent = (e)=> {
  * @property {String|PIXI:Container} value - The sticker element to add.
  */
 /**
+ * Sends a JSON string representing a full stage scene that attempts to add
+ * stickers and backgrounds.
+ *
+ * @event add-scene
+ * @type {object}
+ * @property {String} value - The JSON representing the full scene to add.
+ */
+/**
  * Casts the drop sticker event and adds the specified sticker.
  * NB: The position values should be normalised to the canvas PRIOR
  * to being sent to this listener.

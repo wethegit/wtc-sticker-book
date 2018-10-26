@@ -1048,7 +1048,7 @@ class Sticker extends PIXI.Container {
    * @readonly
    * @type {string}
    */
-  get stickerType() {
+  static get stickerType() {
     return 'basic-sticker';
   }
   /**
@@ -1059,8 +1059,8 @@ class Sticker extends PIXI.Container {
    */
   get definition() {
     const output = {
-      type: this.stickerType,
-      texture_id: this.texture.textureCacheIds[0],
+      type: Sticker.stickerType,
+      params: [this.texture.textureCacheIds[0]],
       radius: this.radius,
       position: { x: this.position.x, y: this.position.y },
       rotation: this.stickerRotation

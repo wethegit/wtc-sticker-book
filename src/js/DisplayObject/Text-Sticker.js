@@ -25,6 +25,8 @@ class TextSticker extends Sticker {
   constructor(texture, text, fontFamily, fontSize, strokeWidth) {
     super();
     
+    if(!text) return;
+    
     this.text = text;
     this.fontSize = fontSize;
     this.strokeWidth = strokeWidth;
@@ -204,10 +206,11 @@ class TextSticker extends Sticker {
   /**
    * (getter) the sticker type.
    *
+   * @static
    * @readonly
    * @type {string}
    */
-  get stickerType() {
+  static get stickerType() {
     return 'text-sticker';
   }
   /**
@@ -218,11 +221,14 @@ class TextSticker extends Sticker {
    */
   get definition() {
     const output = {
-      type: this.stickerType,
-      text: this.text,
-      fontSize: this.fontSize,
-      strokeWidth: this.strokeWidth,
-      fontFamily: this.fontFamily,
+      type: TextSticker.stickerType,
+      params: [
+        null,
+        this.text,
+        this.fontFamily,
+        this.fontSize,
+        this.strokeWidth
+      ],
       radius: this.radius,
       position: { x: this.position.x, y: this.position.y },
       rotation: this.stickerRotation
