@@ -13,6 +13,13 @@ const pauseEvent = (e)=> {
  * @module Application
  */
 /**
+ * Casts a download event to the application. Used to generate
+ * an image and echo it to the user's URL bar.
+ *
+ * @event stage-download
+ * @type {object}
+ */
+/**
  * Casts a reset event to the application. Used to clear the canvas
  * and start over.
  *

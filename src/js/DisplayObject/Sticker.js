@@ -90,6 +90,8 @@ class Sticker extends PIXI.Container {
     // this.onEnable = this.onEnable.bind(this);
     eventListener.on('sticker-focus', this.onFocus);
     eventListener.on('sticker-unfocus', this.onUnFocus);
+    window.addEventListener('keydown', this.onKeyPress);
+    window.addEventListener('keyup', this.onKeyUp);
     
     // Add everything to the container
     this.addChild(this.indicator);
@@ -317,6 +319,11 @@ class Sticker extends PIXI.Container {
     // Removing external event listeners
     eventListener.off('sticker-focus', this.onFocus);
     eventListener.off('sticker-unfocus', this.onUnFocus);
+    window.removeEventListener('keydown', this.onKeyPress);
+    window.removeEventListener('keyup', this.onKeyUp);
+    
+    // making sure we're unfocussed
+    this.hasFocus = false;
   }
   
   /**
@@ -393,24 +400,79 @@ class Sticker extends PIXI.Container {
     this.mouseDown = false;
   }
   /**
-   * @todo Complete
+   * Responds to keypress events and moves, rotates, deltes or 
+   * unfocusses the sprite based on the key.
    *
    * @public
    * @param {Object} e     The event object
    * @return null
    */
   onKeyPress(e) {
+    this.detectDestroy()
+    if( !this.hasFocus ) return;
+    
+    // console.log(e.which); //
+    
+    // Using the modifier key updates the distance for a variety of operations
+    let distance = 1;
+    if( e.shiftKey || e.metaKey || e.altKey || e.ctrlKey ) {
+      this.shiftKey = true;
+      distance = 10;
+    }
+    // delete and backspace remove the sticker
+    if( e.which == 8 || e.which == 46 ) {
+      this.unfocus();
+      this.onDelete();
+    }
+    // escape unfocusses the sticker
+    if( e.which == 27 ) {
+      this.unfocus();
+    }
+    // move left
+    if( e.which == 37 ) {
+      this.position.x -= distance;
+    }
+    // move right
+    if( e.which == 39 ) {
+      this.position.x += distance;
+    }
+    // move up
+    if( e.which == 38 ) {
+      this.position.y -= distance;
+    }
+    // move down
+    if( e.which == 40 ) {
+      this.position.y += distance;
+    }
+    // zoom out
+    if( e.which == 219 || e.which == 189 || e.which == 109 ) {
+      this.radius -= distance;
+    }
+    // zoom in 
+    if( e.which == 221 || e.which == 187 || e.which == 107 ) {
+      this.radius += distance;
+    }
+    // rotate left
+    if( e.which == 188 ) {
+      this.stickerRotation -= distance * .05;
+    }
+    // rotate right
+    if( e.which == 190 ) {
+      this.stickerRotation += distance * .05;
+    }
+    
+    e.preventDefault();
     
   }
   /**
-   * @todo Complete
+   * Responds to key up, this basically just removes the skift key flag.
    *
    * @public
    * @param {Object} e     The event object
    * @return null
    */
   onKeyUp(e) {
-    
+    this.shiftKey = false;
   }
   /**
    * @todo Complete
@@ -537,8 +599,10 @@ class Sticker extends PIXI.Container {
       
       // This is the serious stuff. This sets the rotation and the radius of the sticker based on the
       // polar coordinates generated above
-      // @todo add shift key functionality here
-      this.stickerRotation = polar.phi + this.baseRotation - 0.785398; // Again, this magin number represents the rotational period for the resize button
+      // Holding down the shit key will lock this to resize, and stop sticker rotation
+      if( !this.shiftKey ) {
+        this.stickerRotation = polar.phi + this.baseRotation - 0.785398; // Again, this magin number represents the rotational period for the resize button
+      }
       this.radius = polar.r / this.indicatorScale;
       
       // Position the resize buttons so the user has a nice indication that they're doing something.
@@ -1026,6 +1090,19 @@ class Sticker extends PIXI.Container {
   }
   get mousePosition() {
     return this._mousePosition || {x: 0, y: 0};
+  }
+  
+  /**
+   * (getter/setter) indicates whether the user's shift (or mod) key is pressed.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set shiftKey(value) {
+    this._shiftKey = value === true;
+  }
+  get shiftKey() {
+    return this._shiftKey === true;
   }
   
   /**

@@ -22,7 +22,7 @@ class TextSticker extends Sticker {
    * @constructor
    * @param {PIXI.Texture} texture         The texture object to use to create the sticker
    */
-  constructor(texture, text, fontFamily, fontSize, strokeWidth) {
+  constructor(texture, text, fontFamily, fontSize, strokeWidth, strokeColour, fillColour) {
     super();
     
     if(!text) return;
@@ -31,6 +31,8 @@ class TextSticker extends Sticker {
     this.fontSize = fontSize;
     this.strokeWidth = strokeWidth;
     this.fontFamily = fontFamily;
+    this.strokeColour = strokeColour;
+    this.fillColour = fillColour;
     
     this.initialised = true;
     this.createSprite();
@@ -73,22 +75,23 @@ class TextSticker extends Sticker {
 
       // Set the canvas dimensions based on the calculated values
       this.canvas.width = (lineWidth + this.strokeWidth * 2.) * 2.;
-      this.canvas.height = (this.fontSize * textlines.length + this.strokeWidth * 2.) * 2.;
+      this.canvas.height = (this.fontSize * textlines.length + this.strokeWidth * 2.) * 2. + this.fontSize;
 
       // Set up the canvas for drawing
       ctx = this.canvas.getContext('2d');
-      ctx.font = `${this.fontWeight} ${this.fontSize*2}px ${this.fontFamily}`;
+      ctx.font = `${this.fontWeight} ${this.fontSize * 2.}px ${this.fontFamily}`;
       ctx.textAlign="center";
       ctx.textBaseline="middle"; 
       ctx.lineWidth = this.strokeWidth;
 
       // Loop through the lines and draw each one.
       textlines.forEach((line, i) => {
-        let linepos = this.canvas.height * 1. / textlines.length;
-        linepos = this.fontSize * 2. * .5 + i * linepos;
+        let linepos = this.canvas.height * 1. / textlines.length - this.fontSize / 2.;
+        linepos = this.fontSize * 2. * .5 + i * linepos + this.fontSize / 2.;
 
-        ctx.strokeStyle = 'black';
-        ctx.fillStyle = "white";
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = this.strokeColour;
+        ctx.fillStyle = this.fillColour;
         ctx.lineWidth = this.strokeWidth * 2.;
         ctx.strokeText(line, this.canvas.width*.5, linepos);
 
@@ -163,6 +166,30 @@ class TextSticker extends Sticker {
   }
   get fontFamily() {
     return this._fontFamily || 'helvetica';
+  }
+  /**
+   * (getter/setter) The stroke colour.
+   *
+   * @type {string}
+   * @default 'black'
+   */
+  set strokeColour(value) {
+    if( typeof value === 'string' ) this._strokeColour = value;
+  }
+  get strokeColour() {
+    return this._strokeColour || 'black';
+  }
+  /**
+   * (getter/setter) The fill colour.
+   *
+   * @type {string}
+   * @default 'white'
+   */
+  set fillColour(value) {
+    if( typeof value === 'string' ) this._fillColour = value;
+  }
+  get fillColour() {
+    return this._fillColour || 'white';
   }
   /**
    * (getter/setter) The font weight. Light, bold, 600 etc.

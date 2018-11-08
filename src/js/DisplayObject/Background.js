@@ -24,8 +24,11 @@ class Background extends PIXI.extras.TilingSprite {
    * @param {number} height         The height of the stage
    */
   constructor(texture, width, height) {
-    super(texture, width, height);
+    super(texture, width + 20, height + 20);
     // super();
+    
+    this.x = -10;
+    this.y = -10;
     
     this.anchor.x = .5;
     this.anchor.y = .5;
@@ -94,8 +97,8 @@ class Background extends PIXI.extras.TilingSprite {
     let textureRatio = this.texture.width / this.texture.height;
     let stageRatio = width / height;
     
-    this.width = width;
-    this.height = height;
+    this.width = width + 40.;
+    this.height = height + 40.;
     
     // If the texture size is greater than the stage size, then we need to scale it down
     if(this.texture.width > width || this.texture.height > height) {
@@ -118,8 +121,8 @@ class Background extends PIXI.extras.TilingSprite {
       }
     }
     
-    this.position.x = width * .5;
-    this.position.y = height * .5;
+    this.position.x = width * .5 - 10.;
+    this.position.y = height * .5 - 10.;
     
   }
 }
