@@ -71,6 +71,11 @@ class Stage {
     
     // bind any relevant event listeners
     this.onClick = this.onClick.bind(this);
+    this.onKeyPress = this.onKeyPress.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
+    
+    window.addEventListener('keydown', this.onKeyPress);
+    window.addEventListener('keyup', this.onKeyUp);
     
     window.t = this;
   }
@@ -88,9 +93,6 @@ class Stage {
     // Set up the various callbacks    
     window.addEventListener('pointerdown', this.onClick);
     /**
-     * @todo Document all of these events in the Events container
-     */
-    /**
      * Listens for the reset event.
      *
      * @method
@@ -99,6 +101,15 @@ class Stage {
      */
     eventListener.addListener('stage-reset', (value) => {
       this.reset();
+    });
+    /**
+     * Listens for the stage download event.
+     *
+     * @method
+     * @listens Events:stage-download
+     */
+    eventListener.addListener('stage-download', (value) => {
+      this.download();
     });
     /**
      * Listens for a resize event cast from an unspecified location.
@@ -182,6 +193,8 @@ class Stage {
     // @todo add more destruction here.
     // Remove all relevant event listeners
     window.removeEventListener('pointerdown', this.onClick);
+    window.removeEventListener('keydown', this.onKeyPress);
+    window.removeEventListener('keyup', this.onKeyUp);
   }
   
   /**
@@ -194,7 +207,18 @@ class Stage {
     this.stage = new PIXI.Container();
     this.bg = new PIXI.Container();
     this.foreground = new PIXI.Container();
+    this.topLayer = new PIXI.Container();
     this.cardRear = new PIXI.Container();
+    
+    /**
+     * Fires after the stage has been reset, allows you to run any
+     * necessary actions on the stage elements after a reset but
+     * before interation
+     *
+     * @event stage-didreset
+     * @type {object}
+     */
+    setTimeout(()=> eventListener.emitEvent('stage-didreset', [this]), 10);
   }
   /**
    * This method takes a JSON string value and pases it into an object
@@ -340,6 +364,7 @@ class Stage {
     this.foreground.addChild(sprite);
     
     sprite.focus();
+    this.hasFocus = true;
   }
   /**
    * This adds a background. Backgrounds are always singular, so adding a 
@@ -362,6 +387,12 @@ class Stage {
       });
     }
     
+    let bgmatte = new PIXI.Graphics();
+    bgmatte.clear();
+    bgmatte.beginFill(0xFFFFFF);
+    bgmatte.drawRect(0, 0, this.dimensions.x, this.dimensions.y);
+    this.bg.addChild(bgmatte);
+    
     // If this a clear call, just return, at this point
     if(value === Stage.BG_CLEAR) {
       return;
@@ -381,6 +412,27 @@ class Stage {
     if(this.bg) {
       this.bg.addChild(backgroundSprite);
     }
+  }
+  /**
+   * This adds a filter
+   *
+   * @public
+   * @param {PIXI.Filter} value              A PIXI filter to apply to the stage as a while
+   * @return void
+   */
+  addFilter(value) {
+    value.stageInstance = this;
+    this.stage.filters = this.stage.filters instanceof Array ? this.stage.filters.concat([value]) : [value];
+  }
+  /**
+   * Removes all filters
+   *
+   * @public
+   * @param {PIXI.Filter} value              A PIXI filter to apply to the stage as a while
+   * @return void
+   */
+  removeAllFilters(value) {
+    this.stage.filters = [];
   }
   /**
    * This outputs the scene for use as a data object. Mainly the use
@@ -405,6 +457,26 @@ class Stage {
     }
     
     return output;
+  }
+  /**
+   * This renders the canvas to an image and either returns the image data
+   * or renders it to the user's URL for download
+   *
+   * @public
+   * @param {boolean} behaviour   Whether to download the image or return the image data for further use
+   * @return {object|string}      A representation of the scene, for consumption by an instance of the Sticker book
+   */
+  download(behaviour = 0) {
+    let imgData = this.imageData;
+    if(behaviour === Stage.DOWNLOAD_BEHAVIOUR_DOWNLOAD) {
+      var url = imgData.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
+      console.log(url);
+      window.open(url);
+    } else if(behaviour === Stage.DOWNLOAD_BEHAVIOUR_RETURN) {
+      let img = new Image();
+      img.src = imgData;
+      return img;
+    }
   }
   /**
    * This registeres a sticker type to an identifier. This just
@@ -439,7 +511,12 @@ class Stage {
   /**
    * Event callbacks
    */
-  onClick() {
+  onClick(e) {
+    if(e.target.parentNode === this.container) {
+      this.hasFocus = true;
+    } else {
+      this.hasFocus = false;
+    }
     /**
      * On click event. This is when you click anywhere in the window and will just
      * send an unfocus event to all relevant sub elements.
@@ -449,6 +526,57 @@ class Stage {
      */
     setTimeout(()=> eventListener.emitEvent('sticker-unfocus', [this]), 10);
     
+  }
+  /**
+   * Responds to keypress events and moves, rotates, deltes or 
+   * unfocusses the sprite based on the key.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onKeyPress(e) {
+    if( !this.hasFocus ) return;
+    
+    // console.log(e.which); //
+    
+    // Using the modifier key updates the distance for a variety of operations
+    let direction = 1;
+    if( e.shiftKey || e.metaKey || e.altKey || e.ctrlKey ) {
+      this.shiftKey = true;
+      direction = -1;
+    }
+    if( e.which == 9 ) {
+      let toFocus;
+      this.foreground.children.forEach((child, i) => {
+        if(!toFocus) {
+          if(child.hasFocus) {
+            toFocus = this.foreground.children[i+direction];
+          }
+        }
+      });
+      if(!toFocus) {
+        if(direction == 1) {
+          toFocus = this.foreground.children[0];
+        } else {
+          toFocus = this.foreground.children[this.foreground.children.length - 1];
+        }
+      }
+      toFocus.focus();
+    }
+    
+    e.preventDefault();
+    
+  }
+  /**
+   * Responds to key up, this basically just removes the skift key flag.
+   *
+   * @public
+   * @param {Object} e     The event object
+   * @return null
+   */
+  onKeyUp(e) {
+    this.shiftKey = false;
   }
   
   
@@ -521,16 +649,41 @@ class Stage {
   set stage(value) {
     if( value instanceof PIXI.Container ) {
       if(this.stage instanceof PIXI.Container ) {
-        this.app.stage.removeChild(this.stage);
+        this.app.stage.removeChild(this.app.stage.children[0]);
       }
       this._stage = value;
       this._stage.name = 'rootStage';
-      this.app.stage.addChild(this.stage);
-      window.applicationStage = this.app.stage;
+      
+      let stageContainer = new PIXI.Container();
+      stageContainer.addChild(this._stage);
+      this.app.stage.addChild(stageContainer);
+      
+      this.px_mask_bounds = new PIXI.Graphics();
     }
   }
   get stage() {
     return this._stage || null;
+  }
+  /**
+   * (getter/setter) Add the pixel mask to the stage
+   *
+   * @TODO Fall back and remove any old masks that already might exist
+   * @type {PIXI.Graphics}
+   * @default null
+   */
+  set px_mask_bounds(value) {
+    if(value instanceof PIXI.Graphics) {
+      this._px_mask_bounds = value;
+      value.beginFill(0xFFFFFF); // For some reason, if we use any other colour, all sorts of things mess up. Not sure why
+      value.drawRect(0, 0, this.dimensions.x, this.dimensions.y);
+      value.renderable = true;
+      value.cacheAsBitmap = true;
+      this.app.stage.children[0].addChild(value);
+      this.app.stage.children[0].mask = value;
+    }
+  }
+  get px_mask_bounds() {
+    return this._px_mask_bounds || null;
   }
   /**
    * (getter/setter) Add the background instance and remove any
@@ -589,6 +742,28 @@ class Stage {
     return this._foreground || null;
   }
   /**
+   * (getter/setter) Add the top layer instance and remove any
+   * already existing stage elements.
+   * The top layer is typicaly used for any elements that need 
+   * to appear in front of the sprites themselves.
+   *
+   * @type {PIXI.Container}
+   * @default null
+   */
+  set topLayer(value) {
+    if( value instanceof PIXI.Container ) {
+      if(this.topLayer instanceof PIXI.Container ) {
+        this.stage.removeChild(this.topLayer);
+      }
+      this._topLayer = value;
+      this._topLayer.name = 'topLayer';
+      this.stage.addChild(this.topLayer);
+    }
+  }
+  get topLayer() {
+    return this._topLayer || null;
+  }
+  /**
    * (getter/setter) Add the rear card instance and remove any
    * already existing stage elements
    *
@@ -620,6 +795,10 @@ class Stage {
       this._dimensions = value;
       this.stageRatio = value.x / value.y;
       this.app.renderer.resize(value.x * this.pxAspect, value.y * this.pxAspect);
+      if(this.px_mask_bounds) {
+        this.px_mask_bounds.width = value.x;
+        this.px_mask_bounds.height = value.y;
+      }
       /**
        * The stage resize event. Fired whenever the dimensions of the stage
        * are reset.
@@ -661,11 +840,62 @@ class Stage {
   get stageRatio() {
     return this._stageRatio || 1;
   }
+  
+  /**
+   * (getter/setter) indicates whether the user's shift (or mod) key is pressed.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set shiftKey(value) {
+    this._shiftKey = value === true;
+  }
+  get shiftKey() {
+    return this._shiftKey === true;
+  }
+  
+  /**
+   * (getter/setter) Indicates whether the stage has focus, which provides all
+   * of the flags for determining whether the stage should react to user input.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  set hasFocus(value) {
+    this._hasFocus = value === true;
+  }
+  get hasFocus() {
+    return this._hasFocus === true;
+  }
+  
+  /**
+   * (getter) The image for the stage
+   *
+   * @readonly
+   * @type {DomElement}
+   */
+  get image() {
+    let imageElement = this.app.renderer.plugins.extract.image(this.app.stage);
+    return imageElement;
+  }
+  
+  /**
+   * (getter) The image data for the stage
+   *
+   * @readonly
+   * @type {string}
+   */
+  get imageData() {
+    return this.image.src;
+  }
 }
 
 Stage.stickertypes = [];
 
 Stage.BG_CLEAR = 1;
+
+Stage.DOWNLOAD_BEHAVIOUR_DOWNLOAD = 0;
+Stage.DOWNLOAD_BEHAVIOUR_RETURN = 1;
 
 Stage.registerSticker(Sticker);
 Stage.registerSticker(TextSticker);
@@ -682,13 +912,13 @@ export default Stage;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Application.html">Application</a></li><li><a href="module-DisplayObject.html">DisplayObject</a></li></ul><h3>Classes</h3><ul><li><a href="module-Application-Stage.html">Stage</a></li><li><a href="module-DisplayObject-Background.html">Background</a></li><li><a href="module-DisplayObject-Sticker.html">Sticker</a></li><li><a href="module-DisplayObject-TextSticker.html">TextSticker</a></li></ul><h3>Events</h3><ul><li><a href="module-Application.html#~event:add-scene">add-scene</a></li><li><a href="module-Application.html#~event:add-sticker">add-sticker</a></li><li><a href="module-Application.html#~event:set-background">set-background</a></li><li><a href="module-Application.html#~event:stage-reset">stage-reset</a></li><li><a href="module-Application.html#~event:stage-resize">stage-resize</a></li><li><a href="module-DisplayObject.html#~event:sticker-added">sticker-added</a></li><li><a href="module-DisplayObject.html#~event:sticker-dragged">sticker-dragged</a></li><li><a href="module-DisplayObject.html#~event:sticker-focus">sticker-focus</a></li><li><a href="module-DisplayObject.html#~event:sticker-resized">sticker-resized</a></li><li><a href="module-Application.html#~event:sticker-unfocus">sticker-unfocus</a></li><li><a href="module-DisplayObject.html#~event:sticker-unfocussed">sticker-unfocussed</a></li><li><a href="module-Application.html#~event:viewport-resize">viewport-resize</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Application.html">Application</a></li><li><a href="module-DisplayObject.html">DisplayObject</a></li></ul><h3>Classes</h3><ul><li><a href="module-Application-Stage.html">Stage</a></li><li><a href="module-DisplayObject-Background.html">Background</a></li><li><a href="module-DisplayObject-Sticker.html">Sticker</a></li><li><a href="module-DisplayObject-TextSticker.html">TextSticker</a></li></ul><h3>Events</h3><ul><li><a href="module-Application.html#~event:add-scene">add-scene</a></li><li><a href="module-Application.html#~event:add-sticker">add-sticker</a></li><li><a href="module-Application.html#~event:set-background">set-background</a></li><li><a href="module-Application.html#~event:stage-didreset">stage-didreset</a></li><li><a href="module-Application.html#~event:stage-download">stage-download</a></li><li><a href="module-Application.html#~event:stage-reset">stage-reset</a></li><li><a href="module-Application.html#~event:stage-resize">stage-resize</a></li><li><a href="module-DisplayObject.html#~event:sticker-added">sticker-added</a></li><li><a href="module-DisplayObject.html#~event:sticker-dragged">sticker-dragged</a></li><li><a href="module-DisplayObject.html#~event:sticker-focus">sticker-focus</a></li><li><a href="module-DisplayObject.html#~event:sticker-resized">sticker-resized</a></li><li><a href="module-Application.html#~event:sticker-unfocus">sticker-unfocus</a></li><li><a href="module-DisplayObject.html#~event:sticker-unfocussed">sticker-unfocussed</a></li><li><a href="module-Application.html#~event:viewport-resize">viewport-resize</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Oct 26 2018 10:50:24 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Nov 08 2018 15:41:38 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>
