@@ -763,10 +763,31 @@ class Sticker extends PIXI.Container {
    * @default 0.5
    */
   set buttonScale(value) {
-    if(value > 0) this._buttonScale = value;
+    if(value > 0) {
+      this._buttonScale = value;
+      
+      if(this.buttonDelete) this.buttonDelete.scale.x = this.buttonDelete.scale.y = value;
+      if(this.buttonResize) this.buttonResize.scale.x = this.buttonResize.scale.y = value;
+      
+      console.log(this.buttonDelete, this.buttonDelete.scale)
+    }
   }
   get buttonScale() {
-    return this._buttonScale || .5;
+    return this._buttonScale || Sticker.defaultButtonScale;
+  }
+  
+  /**
+   * (getter/setter) The default size to scale the control buttons for the sticker.
+   *
+   * @static
+   * @type {number}
+   * @default 0.5
+   */
+  static set defaultButtonScale(value) {
+    if(value > 0) Sticker._defaultButtonScale = value;
+  }
+  static get defaultButtonScale() {
+    return Sticker._defaultButtonScale || .5;
   }
   
   /**
@@ -906,7 +927,6 @@ class Sticker extends PIXI.Container {
    * @default diameter * .5 + 20
    */
   set radius(value) {
-    console.log(value)
     if(!isNaN(value)) {
       this._radius = value;
       
