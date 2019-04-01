@@ -1,16 +1,28 @@
 {
   "name": "wtc-sticker-book",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Stickerbook is a pixi application that provides 2D scene layout functionality.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "babel src/index.js --presets @babel/preset-env --out-dir dist",
+    "build-es5": "npx webpack --config webpack.config.js",
+    "prepublish": "npm run build && npm run build-es5"
+  },
   "repository": "git@github.com:wethegit/wtc-sticker-book.git",
   "author": "Liam Egan <liam@wethecollective.com>",
   "license": "MIT",
   "private": false,
   "dependencies": {
+    "@babel/polyfill": "^7.4.0",
     "pixi.js": "^4.8.2"
   },
   "devDependencies": {
-    "jsdoc": "^3.5.5"
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.4.0",
+    "@babel/preset-env": "^7.4.2",
+    "babel-loader": "^8.0.5",
+    "jsdoc": "^3.5.5",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
   }
 }
