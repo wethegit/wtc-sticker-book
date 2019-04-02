@@ -1,5 +1,7 @@
 import * as PIXI from 'pixi.js';
 
-import { Stage, loader, eventListener } from './application';
+import Stage from './application/Stage.js';
+import loader from './application/Preloader.js';
+import eventListener from './application/Events.js';
 
-export default { PIXI, Stage, loader, eventListener };
+export { Stage as default, PIXI, loader, eventListener };

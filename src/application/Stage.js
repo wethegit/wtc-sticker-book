@@ -872,6 +872,4 @@ Stage.DOWNLOAD_BEHAVIOUR_RETURN = 1;
 Stage.registerSticker(Sticker);
 Stage.registerSticker(TextSticker);
 
-console.log(Stage.stickerypes);
-
 export default Stage;

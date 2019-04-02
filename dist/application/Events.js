@@ -1,20 +1,29 @@
+"use strict";
 
-import * as EventEmitter from 'wolfy87-eventemitter';
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.pauseEvent = exports.default = void 0;
 
-const eventListener = new EventEmitter.default();
+var EventEmitter = _interopRequireWildcard(require("wolfy87-eventemitter"));
 
-// This just allows us to pass in an event object and pause / cancel it.
-const pauseEvent = (e)=> {
-  if(e.stopPropagation) e.stopPropagation();
-  if(e.preventDefault) e.preventDefault();
-  e.cancelBubble=true;
-  e.returnValue=false;
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+
+var eventListener = new EventEmitter.default(); // This just allows us to pass in an event object and pause / cancel it.
+
+exports.default = eventListener;
+
+var pauseEvent = function pauseEvent(e) {
+  if (e.stopPropagation) e.stopPropagation();
+  if (e.preventDefault) e.preventDefault();
+  e.cancelBubble = true;
+  e.returnValue = false;
   return false;
-}
-
+};
 /**
  * @module Application
  */
+
 /**
  * Casts a download event to the application. Used to generate
  * an image and echo it to the user's URL bar.
@@ -22,6 +31,7 @@ const pauseEvent = (e)=> {
  * @event stage-download
  * @type {object}
  */
+
 /**
  * Casts a reset event to the application. Used to clear the canvas
  * and start over.
@@ -29,6 +39,7 @@ const pauseEvent = (e)=> {
  * @event stage-reset
  * @type {object}
  */
+
 /**
  * Casts a resize event to the application.
  *
@@ -37,6 +48,7 @@ const pauseEvent = (e)=> {
  * @property {number} width - The width to resize the viewport to
  * @property {number} height - The height to resize the viewport to
  */
+
 /**
  * Casts a set background event and sets the background with the value provided.
  *
@@ -44,6 +56,7 @@ const pauseEvent = (e)=> {
  * @type {object}
  * @property {String|PIXI:Container} value - The background element to add.
  */
+
 /**
  * Casts a add sticker event and sets the background with the value provided.
  * can operate with either a texture identifier or a sticker object.
@@ -52,6 +65,7 @@ const pauseEvent = (e)=> {
  * @type {object}
  * @property {String|PIXI:Container} value - The sticker element to add.
  */
+
 /**
  * Sends a JSON string representing a full stage scene that attempts to add
  * stickers and backgrounds.
@@ -60,6 +74,7 @@ const pauseEvent = (e)=> {
  * @type {object}
  * @property {String} value - The JSON representing the full scene to add.
  */
+
 /**
  * Casts the drop sticker event and adds the specified sticker.
  * NB: The position values should be normalised to the canvas PRIOR
@@ -80,4 +95,5 @@ const pauseEvent = (e)=> {
  * @property {Object} position - the position of the dropped sticker on the canvas
  */
 
-export { eventListener as default, pauseEvent };
+
+exports.pauseEvent = pauseEvent;
