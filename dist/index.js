@@ -21,6 +21,18 @@ Object.defineProperty(exports, "eventListener", {
     return _Events.default;
   }
 });
+Object.defineProperty(exports, "Sticker", {
+  enumerable: true,
+  get: function get() {
+    return _Sticker.default;
+  }
+});
+Object.defineProperty(exports, "TextSticker", {
+  enumerable: true,
+  get: function get() {
+    return _Sticker.default;
+  }
+});
 exports.PIXI = void 0;
 
 var PIXI = _interopRequireWildcard(require("pixi.js"));
@@ -32,6 +44,8 @@ var _Stage = _interopRequireDefault(require("./application/Stage.js"));
 var _Preloader = _interopRequireDefault(require("./application/Preloader.js"));
 
 var _Events = _interopRequireDefault(require("./application/Events.js"));
+
+var _Sticker = _interopRequireDefault(require("./DisplayObject/Sticker.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
