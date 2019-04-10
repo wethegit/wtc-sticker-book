@@ -30,7 +30,7 @@ Object.defineProperty(exports, "Sticker", {
 Object.defineProperty(exports, "TextSticker", {
   enumerable: true,
   get: function get() {
-    return _Sticker.default;
+    return _TextSticker.default;
   }
 });
 exports.PIXI = void 0;
@@ -46,6 +46,8 @@ var _Preloader = _interopRequireDefault(require("./application/Preloader.js"));
 var _Events = _interopRequireDefault(require("./application/Events.js"));
 
 var _Sticker = _interopRequireDefault(require("./DisplayObject/Sticker.js"));
+
+var _TextSticker = _interopRequireDefault(require("./DisplayObject/Text-Sticker.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
