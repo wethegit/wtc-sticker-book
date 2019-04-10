@@ -35,6 +35,8 @@ Object.defineProperty(exports, "TextSticker", {
 });
 exports.PIXI = void 0;
 
+require("pepjs");
+
 var PIXI = _interopRequireWildcard(require("pixi.js"));
 
 exports.PIXI = PIXI;
