@@ -1,4 +1,4 @@
-import './pepjs';
+import './pep.js';
 import * as PIXI from 'pixi.js';
 
 import Stage from './application/Stage.js';
