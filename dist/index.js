@@ -15,6 +15,12 @@ Object.defineProperty(exports, "loader", {
     return _Preloader.default;
   }
 });
+Object.defineProperty(exports, "resources", {
+  enumerable: true,
+  get: function get() {
+    return _Preloader.resources;
+  }
+});
 Object.defineProperty(exports, "eventListener", {
   enumerable: true,
   get: function get() {
@@ -43,7 +49,7 @@ exports.PIXI = PIXI;
 
 var _Stage = _interopRequireDefault(require("./application/Stage.js"));
 
-var _Preloader = _interopRequireDefault(require("./application/Preloader.js"));
+var _Preloader = _interopRequireWildcard(require("./application/Preloader.js"));
 
 var _Events = _interopRequireDefault(require("./application/Events.js"));
 
