@@ -669,7 +669,7 @@ class Stage {
       if(this.bg instanceof PIXI.Container ) {
         this.stage.removeChild(this.bg);
       }
-      this._bg = value;;
+      this._bg = value;
       this._bg.name = 'background';
       this.stage.addChild(this.bg);
     }
