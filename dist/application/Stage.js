@@ -783,7 +783,6 @@ function () {
         }
 
         this._bg = value;
-        ;
         this._bg.name = 'background';
         this.stage.addChild(this.bg);
       }

@@ -151,12 +151,14 @@ function (_PIXI$extras$TilingSp) {
           // or landscape to a portrait
           this.tileScale.y = this.height / this.texture.height;
           this.tileScale.x = this.tileScale.y;
-          this.tilePosition.x = -(this.texture.width * this.tileScale.x - width) * .5;
+          this.tilePosition.x = width * .5 + 40 - this.texture.width * this.tileScale.x * .5;
+          this.tilePosition.y = height * .5 + 40 - this.texture.height * this.tileScale.y * .5;
         } else {
           // cropping a portrait to a landscape
           this.tileScale.x = this.width / this.texture.width;
           this.tileScale.y = this.tileScale.x;
-          this.tilePosition.y = -(this.texture.height * this.tileScale.y - height) * .5;
+          this.tilePosition.x = width * .5 + 40 - this.texture.width * this.tileScale.x * .5;
+          this.tilePosition.y = height * .5 + 40 - this.texture.height * this.tileScale.y * .5;
         }
       }
 
