@@ -150,13 +150,13 @@ function (_PIXI$extras$TilingSp) {
           // a portrait to a portrait
           // or landscape to a portrait
           this.tileScale.y = this.height / this.texture.height;
-          this.tileScale.x = this.tileScale.y * textureRatio; // cropPosition[1] = targetDimensions[1] / 2. - resizeDimensions[1] / 2.;
-          // cropPosition[0] = 0;
+          this.tileScale.x = this.tileScale.y;
+          this.tilePosition.x = -(this.texture.width * this.tileScale.x - width) * .5;
         } else {
           // cropping a portrait to a landscape
           this.tileScale.x = this.width / this.texture.width;
-          this.tileScale.y = this.tileScale.x / textureRatio; // cropPosition[1] = targetDimensions[1] / 2. - resizeDimensions[1] / 2.;
-          // cropPosition[0] = 0;
+          this.tileScale.y = this.tileScale.x;
+          this.tilePosition.y = -(this.texture.height * this.tileScale.y - height) * .5;
         }
       }
 
