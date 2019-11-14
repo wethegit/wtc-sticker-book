@@ -83,8 +83,8 @@ function () {
     this.onClick = this.onClick.bind(this);
     this.onKeyPress = this.onKeyPress.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
-    window.addEventListener('keydown', this.onKeyPress);
-    window.addEventListener('keyup', this.onKeyUp);
+    window.addEventListener("keydown", this.onKeyPress);
+    window.addEventListener("keyup", this.onKeyUp);
     window.t = this;
   }
   /**
@@ -98,9 +98,9 @@ function () {
       var _this = this;
 
       // Set up the basic structure of the stage
-      this.reset(); // Set up the various callbacks    
+      this.reset(); // Set up the various callbacks
 
-      window.addEventListener('pointerdown', this.onClick);
+      window.addEventListener("pointerdown", this.onClick);
       /**
        * Listens for the reset event.
        *
@@ -109,7 +109,7 @@ function () {
        * @listens Events:stage-reset
        */
 
-      _Events.default.addListener('stage-reset', function (value) {
+      _Events.default.addListener("stage-reset", function (value) {
         _this.reset();
       });
       /**
@@ -120,7 +120,7 @@ function () {
        */
 
 
-      _Events.default.addListener('stage-download', function (value) {
+      _Events.default.addListener("stage-download", function (value) {
         _this.download();
       });
       /**
@@ -133,7 +133,7 @@ function () {
        */
 
 
-      _Events.default.addListener('viewport-resize', function (width, height) {
+      _Events.default.addListener("viewport-resize", function (width, height) {
         // this.setViewportDimensions(width, height);
         _this.dimensions = {
           x: width,
@@ -151,7 +151,7 @@ function () {
        */
 
 
-      _Events.default.addListener('set-background', function (value) {
+      _Events.default.addListener("set-background", function (value) {
         _this.setBackground(value);
       });
       /**
@@ -163,11 +163,11 @@ function () {
        */
 
 
-      _Events.default.addListener('add-sticker', function (value) {
+      _Events.default.addListener("add-sticker", function (value) {
         _this.addSticker(value);
       });
       /**
-       * Listens for the add scene event and attempts to parse the JSON 
+       * Listens for the add scene event and attempts to parse the JSON
        * string into a scene
        *
        * @method
@@ -176,7 +176,7 @@ function () {
        */
 
 
-      _Events.default.addListener('add-scene', function (value) {
+      _Events.default.addListener("add-scene", function (value) {
         _this.addScene(value);
       });
       /**
@@ -198,7 +198,7 @@ function () {
        */
 
 
-      _Events.default.addListener('drop-sticker', function (value, position) {
+      _Events.default.addListener("drop-sticker", function (value, position) {
         _this.dropSticker(value, position);
       });
 
@@ -218,9 +218,9 @@ function () {
     value: function destroy() {
       // @todo add more destruction here.
       // Remove all relevant event listeners
-      window.removeEventListener('pointerdown', this.onClick);
-      window.removeEventListener('keydown', this.onKeyPress);
-      window.removeEventListener('keyup', this.onKeyUp);
+      window.removeEventListener("pointerdown", this.onClick);
+      window.removeEventListener("keydown", this.onKeyPress);
+      window.removeEventListener("keyup", this.onKeyUp);
     }
     /**
      * This resets the application, setting up all of the basic components
@@ -236,6 +236,7 @@ function () {
 
       this.stage = new PIXI.Container();
       this.bg = new PIXI.Container();
+      this.middleLayer = new PIXI.Container();
       this.foreground = new PIXI.Container();
       this.topLayer = new PIXI.Container();
       this.cardRear = new PIXI.Container();
@@ -249,7 +250,7 @@ function () {
        */
 
       setTimeout(function () {
-        return _Events.default.emitEvent('stage-didreset', [_this2]);
+        return _Events.default.emitEvent("stage-didreset", [_this2]);
       }, 10);
     }
     /**
@@ -269,7 +270,7 @@ function () {
       var _this3 = this;
 
       var data;
-      if (typeof value !== 'string') return; // Try to parse the data
+      if (typeof value !== "string") return; // Try to parse the data
 
       try {
         data = JSON.parse(value);
@@ -278,7 +279,7 @@ function () {
         return;
       }
 
-      if (!data.background || !data.stickers || typeof data.background !== 'string' && typeof data.background !== 'number' || !(data.stickers instanceof Array)) return; // Clear our scene
+      if (!data.background || !data.stickers || typeof data.background !== "string" && typeof data.background !== "number" || !(data.stickers instanceof Array)) return; // Clear our scene
 
       this.reset(); // Add our background
 
@@ -288,7 +289,7 @@ function () {
         var StickerClass = Stage.stickertypes[sticker.type]; // coerce the class parameters
 
         var params = sticker.params; // We always assume that the first paramater (if provided)
-        // is a texture reference, if that's the case, and it's 
+        // is a texture reference, if that's the case, and it's
         // also valid, then we coerce the value into its
         // associated texture.
 
@@ -354,8 +355,8 @@ function () {
 
       var settings = {
         position: {
-          x: position && !isNaN(position.x) ? position.x : this.dimensions.x * .5,
-          y: position && !isNaN(position.y) ? position.y : this.dimensions.y * .5
+          x: position && !isNaN(position.x) ? position.x : this.dimensions.x * 0.5,
+          y: position && !isNaN(position.y) ? position.y : this.dimensions.y * 0.5
         },
         rotation: rotation,
         radius: radius
@@ -405,7 +406,7 @@ function () {
       this.hasFocus = true;
     }
     /**
-     * This adds a background. Backgrounds are always singular, so adding a 
+     * This adds a background. Backgrounds are always singular, so adding a
      * new background will also remove the old one.
      * One new thing added here is that all backgrounds are tiling, this
      * makes certain that all backgrounds are usable at all possible
@@ -431,7 +432,7 @@ function () {
 
       var bgmatte = new PIXI.Graphics();
       bgmatte.clear();
-      bgmatte.beginFill(0xFFFFFF);
+      bgmatte.beginFill(0xffffff);
       bgmatte.drawRect(0, 0, this.dimensions.x, this.dimensions.y);
       this.bg.addChild(bgmatte); // If this a clear call, just return, at this point
 
@@ -493,7 +494,7 @@ function () {
   }, {
     key: "outputScene",
     value: function outputScene() {
-      var format = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'json';
+      var format = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "json";
       var output = {
         background: this.background,
         stickers: []
@@ -502,7 +503,7 @@ function () {
         output.stickers.push(sticker.definition);
       });
 
-      if (format === 'json') {
+      if (format === "json") {
         return JSON.stringify(output);
       }
 
@@ -524,7 +525,7 @@ function () {
       var imgData = this.imageData;
 
       if (behaviour === Stage.DOWNLOAD_BEHAVIOUR_DOWNLOAD) {
-        var url = imgData.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
+        var url = imgData.replace(/^data:image\/[^;]+/, "data:application/octet-stream");
         console.log(url);
         window.open(url);
       } else if (behaviour === Stage.DOWNLOAD_BEHAVIOUR_RETURN) {
@@ -538,7 +539,7 @@ function () {
      * allows us to pass the data for different sticker types
      *
      * @public
-     * @param {DisplayObject.Sticker} sticker   The sticker to register 
+     * @param {DisplayObject.Sticker} sticker   The sticker to register
      */
 
   }, {
@@ -583,11 +584,11 @@ function () {
 
 
       setTimeout(function () {
-        return _Events.default.emitEvent('sticker-unfocus', [_this5]);
+        return _Events.default.emitEvent("sticker-unfocus", [_this5]);
       }, 10);
     }
     /**
-     * Responds to keypress events and moves, rotates, deltes or 
+     * Responds to keypress events and moves, rotates, deltes or
      * unfocusses the sprite based on the key.
      *
      * @public
@@ -672,7 +673,7 @@ function () {
       return this._rendering === true;
     }
     /**
-     * (getter/setter) Set up the container (HTML Element) which serves as the 
+     * (getter/setter) Set up the container (HTML Element) which serves as the
      * HTML root of the application.
      *
      * @type {HTMLElement}
@@ -685,7 +686,7 @@ function () {
       if (value instanceof HTMLElement) {
         if (this.container instanceof HTMLElement) {
           /**
-           * @todo Set up a facility whereby the PIXI application is removed 
+           * @todo Set up a facility whereby the PIXI application is removed
            * from the old container and moved to the new one.
            */
         }
@@ -731,7 +732,7 @@ function () {
         }
 
         this._stage = value;
-        this._stage.name = 'rootStage';
+        this._stage.name = "rootStage";
         var stageContainer = new PIXI.Container();
         stageContainer.addChild(this._stage);
         this.app.stage.addChild(stageContainer);
@@ -754,7 +755,7 @@ function () {
     set: function set(value) {
       if (value instanceof PIXI.Graphics) {
         this._px_mask_bounds = value;
-        value.beginFill(0xFFFFFF); // For some reason, if we use any other colour, all sorts of things mess up. Not sure why
+        value.beginFill(0xffffff); // For some reason, if we use any other colour, all sorts of things mess up. Not sure why
 
         value.drawRect(0, 0, this.dimensions.x, this.dimensions.y);
         value.renderable = true;
@@ -783,7 +784,7 @@ function () {
         }
 
         this._bg = value;
-        this._bg.name = 'background';
+        this._bg.name = "background";
         this.stage.addChild(this.bg);
       }
     },
@@ -791,7 +792,7 @@ function () {
       return this._bg || null;
     }
     /**
-     * (getter/setter) the background identifier. This is the 
+     * (getter/setter) the background identifier. This is the
      * string or constant that identifies how to draw the
      * sticker book's background.
      *
@@ -802,7 +803,7 @@ function () {
   }, {
     key: "background",
     set: function set(value) {
-      if (typeof value === 'string' || value === Stage.BG_CLEAR) {
+      if (typeof value === "string" || value === Stage.BG_CLEAR) {
         this._background = value;
       }
     },
@@ -826,7 +827,7 @@ function () {
         }
 
         this._foreground = value;
-        this._foreground.name = 'foreground';
+        this._foreground.name = "foreground";
         this.stage.addChild(this.foreground);
       }
     },
@@ -836,7 +837,7 @@ function () {
     /**
      * (getter/setter) Add the top layer instance and remove any
      * already existing stage elements.
-     * The top layer is typicaly used for any elements that need 
+     * The top layer is typicaly used for any elements that need
      * to appear in front of the sprites themselves.
      *
      * @type {PIXI.Container}
@@ -852,12 +853,38 @@ function () {
         }
 
         this._topLayer = value;
-        this._topLayer.name = 'topLayer';
+        this._topLayer.name = "topLayer";
         this.stage.addChild(this.topLayer);
       }
     },
     get: function get() {
       return this._topLayer || null;
+    }
+    /**
+     * (getter/setter) Add the iddle layer instance and remove any
+     * already existing stage elements.
+     * The middle layer is used for any elements that need
+     * to appear between the background and sprites.
+     *
+     * @type {PIXI.Container}
+     * @default null
+     */
+
+  }, {
+    key: "middleLayer",
+    set: function set(value) {
+      if (value instanceof PIXI.Container) {
+        if (this.middleLayer instanceof PIXI.Container) {
+          this.stage.removeChild(this.middleLayer);
+        }
+
+        this._middleLayer = value;
+        this._middleLayer.name = "middleLayer";
+        this.stage.addChild(this.middleLayer);
+      }
+    },
+    get: function get() {
+      return this._middleLayer || null;
     }
     /**
      * (getter/setter) Add the rear card instance and remove any
@@ -876,7 +903,7 @@ function () {
         }
 
         this._cardRear = value;
-        this._cardRear.name = 'cardRear';
+        this._cardRear.name = "cardRear";
         this.stage.addChild(this.cardRear);
       }
     },
@@ -894,7 +921,7 @@ function () {
   }, {
     key: "dimensions",
     set: function set(value) {
-      if (_typeof(value) === 'object' && !isNaN(value.x) && !isNaN(value.y)) {
+      if (_typeof(value) === "object" && !isNaN(value.x) && !isNaN(value.y)) {
         this._dimensions = value;
         this.stageRatio = value.x / value.y;
         this.app.renderer.resize(value.x * this.pxAspect, value.y * this.pxAspect);
@@ -912,7 +939,7 @@ function () {
          */
 
 
-        _Events.default.emitEvent('stage-resize', [value.x, value.y]);
+        _Events.default.emitEvent("stage-resize", [value.x, value.y]);
       }
     },
     get: function get() {
