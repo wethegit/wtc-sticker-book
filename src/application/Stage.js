@@ -1,10 +1,9 @@
-
-import Sticker from '../DisplayObject/Sticker';
-import TextSticker from '../DisplayObject/Text-Sticker';
-import Background from '../DisplayObject/Background';
-import eventListener from './Events';
-import { easeOutExpo } from '../utility/Easing';
-import { resources } from './Preloader';
+import Sticker from "../DisplayObject/Sticker";
+import TextSticker from "../DisplayObject/Text-Sticker";
+import Background from "../DisplayObject/Background";
+import eventListener from "./Events";
+import { easeOutExpo } from "../utility/Easing";
+import { resources } from "./Preloader";
 
 window.resources = resources;
 
@@ -18,7 +17,6 @@ window.resources = resources;
  * @created Oct 17, 2018
  */
 class Stage {
-  
   /**
    * The Stage Class constructor
    *
@@ -28,42 +26,40 @@ class Stage {
    * @param {HTMLElement} container         The HTML element that wull contain the PIXI stage element
    */
   constructor(w, h, container) {
-    this.app = new PIXI.Application(w, h, {backgroundColor : 0x666666});
-    
+    this.app = new PIXI.Application(w, h, { backgroundColor: 0x666666 });
+
     this.container = container;
-    
+
     // Binding necessary functions and callbacks
     this._render = this._render.bind(this);
-    
+
     // This stops PIXI from arresting touch drag events from the
     this.app.renderer.plugins.interaction.autoPreventDefault = false;
-    
+
     // Set up the application dimensions
-    this.dimensions = {x: w, y: h};
-    
+    this.dimensions = { x: w, y: h };
+
     // bind any relevant event listeners
     this.onClick = this.onClick.bind(this);
     this.onKeyPress = this.onKeyPress.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
-    
-    window.addEventListener('keydown', this.onKeyPress);
-    window.addEventListener('keyup', this.onKeyUp);
-    
+
+    window.addEventListener("keydown", this.onKeyPress);
+    window.addEventListener("keyup", this.onKeyUp);
+
     window.t = this;
   }
-  
-  
+
   /**
    * Public methods
    */
-  
+
   init() {
-    
     // Set up the basic structure of the stage
     this.reset();
-    
-    // Set up the various callbacks    
-    window.addEventListener('pointerdown', this.onClick);
+
+    // Set up the various callbacks
+    window.addEventListener("pointerdown", this.onClick);
     /**
      * Listens for the reset event.
      *
@@ -71,7 +67,7 @@ class Stage {
      * @param {DisplayObject:Sticker} value - The sticker element to add.
      * @listens Events:stage-reset
      */
-    eventListener.addListener('stage-reset', (value) => {
+    eventListener.addListener("stage-reset", value => {
       this.reset();
     });
     /**
@@ -80,7 +76,7 @@ class Stage {
      * @method
      * @listens Events:stage-download
      */
-    eventListener.addListener('stage-download', (value) => {
+    eventListener.addListener("stage-download", value => {
       this.download();
     });
     /**
@@ -91,9 +87,9 @@ class Stage {
      * @param {number} height - The height to resize the viewport to
      * @listens Events:viewport-resize
      */
-    eventListener.addListener('viewport-resize', (width, height) => {
+    eventListener.addListener("viewport-resize", (width, height) => {
       // this.setViewportDimensions(width, height);
-      this.dimensions = {x: width, y: height};
+      this.dimensions = { x: width, y: height };
     });
     /**
      * Listens for a set background event cast from an unspecified location
@@ -104,7 +100,7 @@ class Stage {
      * @param {number} type - The type of the background, can be scene or tiling.
      * @listens Events:set-background
      */
-    eventListener.addListener('set-background', (value) => {
+    eventListener.addListener("set-background", value => {
       this.setBackground(value);
     });
     /**
@@ -114,18 +110,18 @@ class Stage {
      * @param {DisplayObject:Sticker} value - The sticker element to add.
      * @listens Events:add-sticker
      */
-    eventListener.addListener('add-sticker', (value) => {
+    eventListener.addListener("add-sticker", value => {
       this.addSticker(value);
     });
     /**
-     * Listens for the add scene event and attempts to parse the JSON 
+     * Listens for the add scene event and attempts to parse the JSON
      * string into a scene
      *
      * @method
      * @param {string} value - The JSON string representing the scene.
      * @listens Events:add-scene
      */
-    eventListener.addListener('add-scene', (value) => {
+    eventListener.addListener("add-scene", value => {
       this.addScene(value);
     });
     /**
@@ -146,13 +142,13 @@ class Stage {
      * @param {Object} position - the position of the dropped sticker on the canvas
      * @listens Events:drop-sticker
      */
-    eventListener.addListener('drop-sticker', (value, position) => {
+    eventListener.addListener("drop-sticker", (value, position) => {
       this.dropSticker(value, position);
     });
-    
+
     this.initialised = true;
   }
-  
+
   /**
    * This destroys the stage, this should be fired whenever you need to
    * remove the stage and get rid of any memory traces of it. For example
@@ -164,11 +160,11 @@ class Stage {
   destroy() {
     // @todo add more destruction here.
     // Remove all relevant event listeners
-    window.removeEventListener('pointerdown', this.onClick);
-    window.removeEventListener('keydown', this.onKeyPress);
-    window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener("pointerdown", this.onClick);
+    window.removeEventListener("keydown", this.onKeyPress);
+    window.removeEventListener("keyup", this.onKeyUp);
   }
-  
+
   /**
    * This resets the application, setting up all of the basic components
    *
@@ -178,10 +174,11 @@ class Stage {
   reset() {
     this.stage = new PIXI.Container();
     this.bg = new PIXI.Container();
+    this.middleLayer = new PIXI.Container();
     this.foreground = new PIXI.Container();
     this.topLayer = new PIXI.Container();
     this.cardRear = new PIXI.Container();
-    
+
     /**
      * Fires after the stage has been reset, allows you to run any
      * necessary actions on the stage elements after a reset but
@@ -190,7 +187,7 @@ class Stage {
      * @event stage-didreset
      * @type {object}
      */
-    setTimeout(()=> eventListener.emitEvent('stage-didreset', [this]), 10);
+    setTimeout(() => eventListener.emitEvent("stage-didreset", [this]), 10);
   }
   /**
    * This method takes a JSON string value and pases it into an object
@@ -204,43 +201,49 @@ class Stage {
    */
   addScene(value) {
     let data;
-    if(typeof value !== 'string') return;
+    if (typeof value !== "string") return;
     // Try to parse the data
     try {
       data = JSON.parse(value);
-    } catch(error) {
+    } catch (error) {
       // fail silently if the value fails to parse
       return;
     }
-    if(
+    if (
       !data.background ||
       !data.stickers ||
-      (typeof data.background !== 'string' && typeof data.background !== 'number') ||
+      (typeof data.background !== "string" &&
+        typeof data.background !== "number") ||
       !(data.stickers instanceof Array)
     )
       return;
-    
+
     // Clear our scene
     this.reset();
-    
+
     // Add our background
     this.setBackground(data.background);
-    
-    data.stickers.forEach((sticker) => {
+
+    data.stickers.forEach(sticker => {
       // Find the class based on the sticker type
       let StickerClass = Stage.stickertypes[sticker.type];
       // coerce the class parameters
       let params = sticker.params;
       // We always assume that the first paramater (if provided)
-      // is a texture reference, if that's the case, and it's 
+      // is a texture reference, if that's the case, and it's
       // also valid, then we coerce the value into its
       // associated texture.
-      if(resources[params[0]]) {
+      if (resources[params[0]]) {
         params[0] = resources[params[0]].texture;
       }
       // If the sticker class exists, then create the sticker and attach it to stage.
-      if(StickerClass) {
-        this.addSticker(new StickerClass(...params), sticker.position, sticker.rotation, sticker.radius);
+      if (StickerClass) {
+        this.addSticker(
+          new StickerClass(...params),
+          sticker.position,
+          sticker.rotation,
+          sticker.radius
+        );
       }
     });
   }
@@ -254,20 +257,22 @@ class Stage {
    * @param {object} position             The position of the dropped sticker.
    */
   dropSticker(value, position) {
-    if( !resources[value] && !(value instanceof Sticker) ) return;
-    window.app = this.app
+    if (!resources[value] && !(value instanceof Sticker)) return;
+    window.app = this.app;
     let offset = this.app.view.getBoundingClientRect();
     offset = {
       top: offset.top + document.body.scrollTop,
       left: offset.left + document.body.scrollLeft
-    }
-    
+    };
+
     const adjustedGlobalPosition = {
-      x: position.x - offset.left, 
-      y: position.y - offset.top };
+      x: position.x - offset.left,
+      y: position.y - offset.top
+    };
     const adjustedCanvasPosition = {
-      x: adjustedGlobalPosition.x / this.stageRatio, 
-      y: adjustedGlobalPosition.y / this.stageRatio };
+      x: adjustedGlobalPosition.x / this.stageRatio,
+      y: adjustedGlobalPosition.y / this.stageRatio
+    };
     this.addSticker(value, adjustedCanvasPosition);
   }
   /**
@@ -281,65 +286,71 @@ class Stage {
    * @return null
    */
   addSticker(value, position = null, rotation = 0, radius = 130) {
-    if( !resources[value] && !(value instanceof Sticker) ) return;
-    
+    if (!resources[value] && !(value instanceof Sticker)) return;
+
     let sprite;
-    
+
     // create the settings object
     let settings = {
-      position : {
-        x: position && !isNaN(position.x) ? position.x : this.dimensions.x * .5,
-        y: position && !isNaN(position.y) ? position.y : this.dimensions.y * .5
+      position: {
+        x:
+          position && !isNaN(position.x) ? position.x : this.dimensions.x * 0.5,
+        y: position && !isNaN(position.y) ? position.y : this.dimensions.y * 0.5
       },
       rotation: rotation,
       radius: radius
     };
-    
+
     // set up the sticker
-    if(value instanceof Sticker) {
+    if (value instanceof Sticker) {
       sprite = value;
     } else {
       let texture = resources[value].texture;
       sprite = new Sticker(texture);
     }
-    
+
     // set position, radius and rotation
     sprite.position.x = settings.position.x;
     sprite.position.y = settings.position.y;
     sprite.radius = settings.radius;
     sprite.stickerRotation = settings.rotation;
-    
+
     // If the added sticker is larger than the stage, then we want to scale it down.
-    if(sprite.w > this.dimensions.x) {
+    if (sprite.w > this.dimensions.x) {
       const ratio = sprite.ratio;
-      const tw = this.dimensions.x / sprite.w * 100; // This is the percentage difference between the stage width and the sticker width
-      const trad = sprite.radius / 100 * tw; // Now modify the sprite's radius by that difference
-      
+      const tw = (this.dimensions.x / sprite.w) * 100; // This is the percentage difference between the stage width and the sticker width
+      const trad = (sprite.radius / 100) * tw; // Now modify the sprite's radius by that difference
+
       sprite.radius = trad;
     }
-    
+
     // This just runs a small transition across the sprite, making it scale up and fade in from 0
     sprite.alpha = 0;
     sprite.scale.x = sprite.scale.y = 0;
     let now = performance.now();
-    const tweener = (delta) => {
+    const tweener = delta => {
       let time = delta - now;
-      if(time < 400) {
-        sprite.scale.x = sprite.scale.y = sprite.alpha = easeOutExpo(time, 0, 1, 400);
+      if (time < 400) {
+        sprite.scale.x = sprite.scale.y = sprite.alpha = easeOutExpo(
+          time,
+          0,
+          1,
+          400
+        );
         requestAnimationFrame(tweener);
       } else {
         sprite.scale.x = sprite.scale.y = sprite.alpha = 1;
       }
     };
     requestAnimationFrame(tweener);
-    
+
     this.foreground.addChild(sprite);
-    
+
     sprite.focus();
     this.hasFocus = true;
   }
   /**
-   * This adds a background. Backgrounds are always singular, so adding a 
+   * This adds a background. Backgrounds are always singular, so adding a
    * new background will also remove the old one.
    * One new thing added here is that all backgrounds are tiling, this
    * makes certain that all backgrounds are usable at all possible
@@ -351,37 +362,40 @@ class Stage {
    */
   setBackground(value) {
     this.background = value;
-    
+
     // Clear out the other children (there can only be one background at a time)
-    if(this.bg) {
-      this.bg.children.forEach((child) => {
+    if (this.bg) {
+      this.bg.children.forEach(child => {
         this.bg.removeChild(child);
       });
     }
-    
+
     let bgmatte = new PIXI.Graphics();
     bgmatte.clear();
-    bgmatte.beginFill(0xFFFFFF);
+    bgmatte.beginFill(0xffffff);
     bgmatte.drawRect(0, 0, this.dimensions.x, this.dimensions.y);
     this.bg.addChild(bgmatte);
-    
+
     // If this a clear call, just return, at this point
-    if(value === Stage.BG_CLEAR) {
+    if (value === Stage.BG_CLEAR) {
       return;
     }
-    if( !resources[value] && !(value instanceof PIXI.Container) ) return;
-    
+    if (!resources[value] && !(value instanceof PIXI.Container)) return;
+
     // create the background sprite
     let backgroundSprite;
-    if(resources[value]) {
+    if (resources[value]) {
       let texture = resources[value].texture;
-      backgroundSprite = new Background(texture, this.dimensions.x, this.dimensions.y);
+      backgroundSprite = new Background(
+        texture,
+        this.dimensions.x,
+        this.dimensions.y
+      );
     } else {
-      
     }
-    
+
     // add it to the bg container
-    if(this.bg) {
+    if (this.bg) {
       this.bg.addChild(backgroundSprite);
     }
   }
@@ -394,7 +408,10 @@ class Stage {
    */
   addFilter(value) {
     value.stageInstance = this;
-    this.stage.filters = this.stage.filters instanceof Array ? this.stage.filters.concat([value]) : [value];
+    this.stage.filters =
+      this.stage.filters instanceof Array
+        ? this.stage.filters.concat([value])
+        : [value];
   }
   /**
    * Removes all filters
@@ -415,19 +432,19 @@ class Stage {
    * @param {string} format
    * @return {object|string}   A representation of the scene, for consumption by an instance of the Sticker book
    */
-  outputScene(format = 'json') {
+  outputScene(format = "json") {
     let output = {
       background: this.background,
       stickers: []
     };
-    this.foreground.children.forEach((sticker) => {
+    this.foreground.children.forEach(sticker => {
       output.stickers.push(sticker.definition);
     });
-    
-    if(format === 'json') {
+
+    if (format === "json") {
       return JSON.stringify(output);
     }
-    
+
     return output;
   }
   /**
@@ -440,11 +457,14 @@ class Stage {
    */
   download(behaviour = 0) {
     let imgData = this.imageData;
-    if(behaviour === Stage.DOWNLOAD_BEHAVIOUR_DOWNLOAD) {
-      var url = imgData.replace(/^data:image\/[^;]+/, 'data:application/octet-stream');
+    if (behaviour === Stage.DOWNLOAD_BEHAVIOUR_DOWNLOAD) {
+      var url = imgData.replace(
+        /^data:image\/[^;]+/,
+        "data:application/octet-stream"
+      );
       console.log(url);
       window.open(url);
-    } else if(behaviour === Stage.DOWNLOAD_BEHAVIOUR_RETURN) {
+    } else if (behaviour === Stage.DOWNLOAD_BEHAVIOUR_RETURN) {
       let img = new Image();
       img.src = imgData;
       return img;
@@ -455,16 +475,19 @@ class Stage {
    * allows us to pass the data for different sticker types
    *
    * @public
-   * @param {DisplayObject.Sticker} sticker   The sticker to register 
+   * @param {DisplayObject.Sticker} sticker   The sticker to register
    */
   static registerSticker(sticker) {
     // Return if the provided is invalid for this operation
     let img = new Image();
-    if( !(new sticker(new PIXI.BaseTexture(img)) instanceof Sticker) || !sticker.stickerType) return;
+    if (
+      !(new sticker(new PIXI.BaseTexture(img)) instanceof Sticker) ||
+      !sticker.stickerType
+    )
+      return;
     Stage.stickertypes[sticker.stickerType] = sticker;
   }
-  
-  
+
   /**
    * Private methods
    */
@@ -475,16 +498,16 @@ class Stage {
    * @param {number} delta    The delta as passed by requestAnimationFrame
    */
   _render(delta) {
-    if(this.rendering) {
+    if (this.rendering) {
       requestAnimationFrame(this._render);
     }
   }
-  
+
   /**
    * Event callbacks
    */
   onClick(e) {
-    if(e.target.parentNode === this.container) {
+    if (e.target.parentNode === this.container) {
       this.hasFocus = true;
     } else {
       this.hasFocus = false;
@@ -496,11 +519,10 @@ class Stage {
      * @event sticker-unfocus
      * @type {object}
      */
-    setTimeout(()=> eventListener.emitEvent('sticker-unfocus', [this]), 10);
-    
+    setTimeout(() => eventListener.emitEvent("sticker-unfocus", [this]), 10);
   }
   /**
-   * Responds to keypress events and moves, rotates, deltes or 
+   * Responds to keypress events and moves, rotates, deltes or
    * unfocusses the sprite based on the key.
    *
    * @public
@@ -508,37 +530,38 @@ class Stage {
    * @return null
    */
   onKeyPress(e) {
-    if( !this.hasFocus ) return;
-    
+    if (!this.hasFocus) return;
+
     // console.log(e.which); //
-    
+
     // Using the modifier key updates the distance for a variety of operations
     let direction = 1;
-    if( e.shiftKey || e.metaKey || e.altKey || e.ctrlKey ) {
+    if (e.shiftKey || e.metaKey || e.altKey || e.ctrlKey) {
       this.shiftKey = true;
       direction = -1;
     }
-    if( e.which == 9 ) {
+    if (e.which == 9) {
       let toFocus;
       this.foreground.children.forEach((child, i) => {
-        if(!toFocus) {
-          if(child.hasFocus) {
-            toFocus = this.foreground.children[i+direction];
+        if (!toFocus) {
+          if (child.hasFocus) {
+            toFocus = this.foreground.children[i + direction];
           }
         }
       });
-      if(!toFocus) {
-        if(direction == 1) {
+      if (!toFocus) {
+        if (direction == 1) {
           toFocus = this.foreground.children[0];
         } else {
-          toFocus = this.foreground.children[this.foreground.children.length - 1];
+          toFocus = this.foreground.children[
+            this.foreground.children.length - 1
+          ];
         }
       }
       toFocus.focus();
     }
-    
+
     e.preventDefault();
-    
   }
   /**
    * Responds to key up, this basically just removes the skift key flag.
@@ -550,12 +573,11 @@ class Stage {
   onKeyUp(e) {
     this.shiftKey = false;
   }
-  
-  
+
   /**
    * Getters and setters
    */
-  
+
   /**
    * (getter/setter) Whether the application is running (rendering). Checks to see
    * if a truthy value already exists and starts up the rendering process if not.
@@ -564,9 +586,9 @@ class Stage {
    * @default false
    */
   set rendering(value) {
-    if(this.rendering === false && value === true) {
+    if (this.rendering === false && value === true) {
       this._rendering = true;
-      
+
       requestAnimationFrame(this._render);
     } else {
       this._rendering = false;
@@ -576,17 +598,17 @@ class Stage {
     return this._rendering === true;
   }
   /**
-   * (getter/setter) Set up the container (HTML Element) which serves as the 
+   * (getter/setter) Set up the container (HTML Element) which serves as the
    * HTML root of the application.
    *
    * @type {HTMLElement}
    * @default null
    */
   set container(value) {
-    if(value instanceof HTMLElement) {
-      if(this.container instanceof HTMLElement) {
+    if (value instanceof HTMLElement) {
+      if (this.container instanceof HTMLElement) {
         /**
-         * @todo Set up a facility whereby the PIXI application is removed 
+         * @todo Set up a facility whereby the PIXI application is removed
          * from the old container and moved to the new one.
          */
       }
@@ -604,7 +626,7 @@ class Stage {
    * @default null
    */
   set app(value) {
-    if(value instanceof PIXI.Application) {
+    if (value instanceof PIXI.Application) {
       this._app = value;
     }
   }
@@ -619,17 +641,17 @@ class Stage {
    * @default null
    */
   set stage(value) {
-    if( value instanceof PIXI.Container ) {
-      if(this.stage instanceof PIXI.Container ) {
+    if (value instanceof PIXI.Container) {
+      if (this.stage instanceof PIXI.Container) {
         this.app.stage.removeChild(this.app.stage.children[0]);
       }
       this._stage = value;
-      this._stage.name = 'rootStage';
-      
+      this._stage.name = "rootStage";
+
       let stageContainer = new PIXI.Container();
       stageContainer.addChild(this._stage);
       this.app.stage.addChild(stageContainer);
-      
+
       this.px_mask_bounds = new PIXI.Graphics();
     }
   }
@@ -644,9 +666,9 @@ class Stage {
    * @default null
    */
   set px_mask_bounds(value) {
-    if(value instanceof PIXI.Graphics) {
+    if (value instanceof PIXI.Graphics) {
       this._px_mask_bounds = value;
-      value.beginFill(0xFFFFFF); // For some reason, if we use any other colour, all sorts of things mess up. Not sure why
+      value.beginFill(0xffffff); // For some reason, if we use any other colour, all sorts of things mess up. Not sure why
       value.drawRect(0, 0, this.dimensions.x, this.dimensions.y);
       value.renderable = true;
       value.cacheAsBitmap = true;
@@ -665,12 +687,12 @@ class Stage {
    * @default null
    */
   set bg(value) {
-    if( value instanceof PIXI.Container ) {
-      if(this.bg instanceof PIXI.Container ) {
+    if (value instanceof PIXI.Container) {
+      if (this.bg instanceof PIXI.Container) {
         this.stage.removeChild(this.bg);
       }
       this._bg = value;
-      this._bg.name = 'background';
+      this._bg.name = "background";
       this.stage.addChild(this.bg);
     }
   }
@@ -678,7 +700,7 @@ class Stage {
     return this._bg || null;
   }
   /**
-   * (getter/setter) the background identifier. This is the 
+   * (getter/setter) the background identifier. This is the
    * string or constant that identifies how to draw the
    * sticker book's background.
    *
@@ -686,7 +708,7 @@ class Stage {
    * @default {Stage.BG_CLEAR}
    */
   set background(value) {
-    if(typeof value === 'string' || value === Stage.BG_CLEAR) {
+    if (typeof value === "string" || value === Stage.BG_CLEAR) {
       this._background = value;
     }
   }
@@ -701,12 +723,12 @@ class Stage {
    * @default null
    */
   set foreground(value) {
-    if( value instanceof PIXI.Container ) {
-      if(this.foreground instanceof PIXI.Container ) {
+    if (value instanceof PIXI.Container) {
+      if (this.foreground instanceof PIXI.Container) {
         this.stage.removeChild(this.foreground);
       }
       this._foreground = value;
-      this._foreground.name = 'foreground';
+      this._foreground.name = "foreground";
       this.stage.addChild(this.foreground);
     }
   }
@@ -716,24 +738,46 @@ class Stage {
   /**
    * (getter/setter) Add the top layer instance and remove any
    * already existing stage elements.
-   * The top layer is typicaly used for any elements that need 
+   * The top layer is typicaly used for any elements that need
    * to appear in front of the sprites themselves.
    *
    * @type {PIXI.Container}
    * @default null
    */
   set topLayer(value) {
-    if( value instanceof PIXI.Container ) {
-      if(this.topLayer instanceof PIXI.Container ) {
+    if (value instanceof PIXI.Container) {
+      if (this.topLayer instanceof PIXI.Container) {
         this.stage.removeChild(this.topLayer);
       }
       this._topLayer = value;
-      this._topLayer.name = 'topLayer';
+      this._topLayer.name = "topLayer";
       this.stage.addChild(this.topLayer);
     }
   }
   get topLayer() {
     return this._topLayer || null;
+  }
+  /**
+   * (getter/setter) Add the iddle layer instance and remove any
+   * already existing stage elements.
+   * The middle layer is used for any elements that need
+   * to appear between the background and sprites.
+   *
+   * @type {PIXI.Container}
+   * @default null
+   */
+  set middleLayer(value) {
+    if (value instanceof PIXI.Container) {
+      if (this.middleLayer instanceof PIXI.Container) {
+        this.stage.removeChild(this.middleLayer);
+      }
+      this._middleLayer = value;
+      this._middleLayer.name = "middleLayer";
+      this.stage.addChild(this.middleLayer);
+    }
+  }
+  get middleLayer() {
+    return this._middleLayer || null;
   }
   /**
    * (getter/setter) Add the rear card instance and remove any
@@ -743,12 +787,12 @@ class Stage {
    * @default null
    */
   set cardRear(value) {
-    if( value instanceof PIXI.Container ) {
-      if(this.cardRear instanceof PIXI.Container ) {
+    if (value instanceof PIXI.Container) {
+      if (this.cardRear instanceof PIXI.Container) {
         this.stage.removeChild(this.cardRear);
       }
       this._cardRear = value;
-      this._cardRear.name = 'cardRear';
+      this._cardRear.name = "cardRear";
       this.stage.addChild(this.cardRear);
     }
   }
@@ -763,11 +807,14 @@ class Stage {
    * @default {x: 0, y: 0}
    */
   set dimensions(value) {
-    if(typeof value === 'object' && !isNaN(value.x) && !isNaN(value.y)) {
+    if (typeof value === "object" && !isNaN(value.x) && !isNaN(value.y)) {
       this._dimensions = value;
       this.stageRatio = value.x / value.y;
-      this.app.renderer.resize(value.x * this.pxAspect, value.y * this.pxAspect);
-      if(this.px_mask_bounds) {
+      this.app.renderer.resize(
+        value.x * this.pxAspect,
+        value.y * this.pxAspect
+      );
+      if (this.px_mask_bounds) {
         this.px_mask_bounds.width = value.x;
         this.px_mask_bounds.height = value.y;
       }
@@ -778,11 +825,11 @@ class Stage {
        * @event stage-resize
        * @type {object}
        */
-      eventListener.emitEvent('stage-resize', [value.x, value.y]);
+      eventListener.emitEvent("stage-resize", [value.x, value.y]);
     }
   }
   get dimensions() {
-    return this._dimensions || {x: 0, y: 0};
+    return this._dimensions || { x: 0, y: 0 };
   }
   /**
    * (getter/setter) The pixel aspect ratio of the application
@@ -791,7 +838,7 @@ class Stage {
    * @default 1
    */
   set pxAspect(value) {
-    if(value > 0) {
+    if (value > 0) {
       this._pxAspect = value;
     }
   }
@@ -805,14 +852,14 @@ class Stage {
    * @default 1
    */
   set stageRatio(value) {
-    if(value > 0) {
+    if (value > 0) {
       this._stageRatio = value;
     }
   }
   get stageRatio() {
     return this._stageRatio || 1;
   }
-  
+
   /**
    * (getter/setter) indicates whether the user's shift (or mod) key is pressed.
    *
@@ -825,7 +872,7 @@ class Stage {
   get shiftKey() {
     return this._shiftKey === true;
   }
-  
+
   /**
    * (getter/setter) Indicates whether the stage has focus, which provides all
    * of the flags for determining whether the stage should react to user input.
@@ -839,7 +886,7 @@ class Stage {
   get hasFocus() {
     return this._hasFocus === true;
   }
-  
+
   /**
    * (getter) The image for the stage
    *
@@ -850,7 +897,7 @@ class Stage {
     let imageElement = this.app.renderer.plugins.extract.image(this.app.stage);
     return imageElement;
   }
-  
+
   /**
    * (getter) The image data for the stage
    *

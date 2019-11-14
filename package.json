@@ -1,6 +1,6 @@
 {
   "name": "wtc-sticker-book",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Stickerbook is a pixi application that provides 2D scene layout functionality.",
   "main": "dist/index.js",
   "scripts": {
