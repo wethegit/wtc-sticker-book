@@ -8,15 +8,25 @@ var preload = PIXI.loader;
 exports.preload = preload;
 var resources = preload.resources;
 exports.resources = resources;
+var ready = true;
+var queue = [];
 
 var loader = function loader(images, callback) {
+  if (!ready) queue.push([images, callback]);
+
   for (var name in images) {
     preload.add(name, images[name]);
   }
 
+  ready = false;
   preload.load(function (loader, resources) {
-    if (callback instanceof Function) {
-      callback(loader, resources);
+    if (callback instanceof Function) callback(loader, resources);
+
+    if (queue.length > 0) {
+      var next = queue.shift();
+      loader(next[0], next[1]);
+    } else {
+      ready = true;
     }
   });
   return loader.resources;
