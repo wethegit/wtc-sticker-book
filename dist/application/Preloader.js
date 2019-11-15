@@ -33,12 +33,11 @@ var loader = function loader(images, callback) {
 
   preload.load(function (loaderResult, resources) {
     if (callback instanceof Function) callback(loaderResult, resources);
+    ready = true;
 
     if (queue.length > 0) {
       var next = queue.shift();
       loader(next[0], next[1]);
-    } else {
-      ready = true;
     }
   });
   return loader.resources;

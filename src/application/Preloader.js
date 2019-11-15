@@ -26,11 +26,10 @@ const loader = (images, callback) => {
   preload.load((loaderResult, resources) => {
     if (callback instanceof Function) callback(loaderResult, resources);
 
+    ready = true;
     if (queue.length > 0) {
       const next = queue.shift();
       loader(next[0], next[1]);
-    } else {
-      ready = true;
     }
   });
 
