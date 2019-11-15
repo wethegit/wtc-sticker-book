@@ -22,7 +22,11 @@ var loader = function loader(images, callback) {
     preload.add(name, images[name]);
   }
 
-  if (toLoad <= 0) return;
+  if (toLoad <= 0) {
+    if (callback) callback(loader, resources);
+    return;
+  }
+
   preload.load(function (loaderResult, resources) {
     if (callback instanceof Function) callback(loaderResult, resources);
 
