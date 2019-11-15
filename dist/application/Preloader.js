@@ -12,7 +12,11 @@ var ready = true;
 var queue = [];
 
 var loader = function loader(images, callback) {
-  if (!ready) queue.push([images, callback]);
+  if (!ready) {
+    queue.push([images, callback]);
+    return;
+  }
+
   ready = false;
   var toLoad = 0;
 

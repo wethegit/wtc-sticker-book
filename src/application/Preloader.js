@@ -4,7 +4,11 @@ let ready = true;
 let queue = [];
 
 const loader = (images, callback) => {
-  if (!ready) queue.push([images, callback]);
+  if (!ready) {
+    queue.push([images, callback]);
+    return;
+  }
+
   ready = false;
 
   let toLoad = 0;
