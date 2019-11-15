@@ -13,12 +13,16 @@ var queue = [];
 
 var loader = function loader(images, callback) {
   if (!ready) queue.push([images, callback]);
+  ready = false;
+  var toLoad = 0;
 
   for (var name in images) {
+    if (resources[name]) return;
+    toLoad++;
     preload.add(name, images[name]);
   }
 
-  ready = false;
+  if (toLoad <= 0) return;
   preload.load(function (loaderResult, resources) {
     if (callback instanceof Function) callback(loaderResult, resources);
 

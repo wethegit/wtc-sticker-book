@@ -5,12 +5,16 @@ let queue = [];
 
 const loader = (images, callback) => {
   if (!ready) queue.push([images, callback]);
+  ready = false;
 
+  let toLoad = 0;
   for (const name in images) {
+    if (resources[name]) return;
+    toLoad++;
     preload.add(name, images[name]);
   }
 
-  ready = false;
+  if (toLoad <= 0) return;
   preload.load((loaderResult, resources) => {
     if (callback instanceof Function) callback(loaderResult, resources);
 
