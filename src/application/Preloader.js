@@ -11,8 +11,8 @@ const loader = (images, callback) => {
   }
 
   ready = false;
-  preload.load((loader, resources) => {
-    if (callback instanceof Function) callback(loader, resources);
+  preload.load((loaderResult, resources) => {
+    if (callback instanceof Function) callback(loaderResult, resources);
 
     if (queue.length > 0) {
       const next = queue.shift();

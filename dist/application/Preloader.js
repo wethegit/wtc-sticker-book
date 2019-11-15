@@ -19,8 +19,8 @@ var loader = function loader(images, callback) {
   }
 
   ready = false;
-  preload.load(function (loader, resources) {
-    if (callback instanceof Function) callback(loader, resources);
+  preload.load(function (loaderResult, resources) {
+    if (callback instanceof Function) callback(loaderResult, resources);
 
     if (queue.length > 0) {
       var next = queue.shift();
