@@ -34,7 +34,7 @@ class Stage {
   constructor(w, h, container, options = {}) {
     options = Object.assign({}, defaultOptions, options);
 
-    this.app = new PIXI.Application(w, h, { backgroundColor: 0x666666 });
+    this.app = new PIXI.Application(w, h, { backgroundColor: 0x666666, preserveDrawingBuffer: true });
 
     this.container = container;
 
