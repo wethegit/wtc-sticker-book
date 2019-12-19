@@ -7,6 +7,10 @@ import { resources } from "./Preloader";
 
 window.resources = resources;
 
+const defaultOptions = {
+  keylisteners: true
+};
+
 /**
  * A class that provides a stage for the WTC Stickerbook
  *
@@ -21,11 +25,15 @@ class Stage {
    * The Stage Class constructor
    *
    * @constructor
-   * @param {number}      w                 The width coord
-   * @param {number}      h                 The height coord
-   * @param {HTMLElement} container         The HTML element that wull contain the PIXI stage element
+   * @param {number}      w                     The width coord
+   * @param {number}      h                     The height coord
+   * @param {HTMLElement} container             The HTML element that wull contain the PIXI stage element
+   * @param {Object}      options               Extra options to pass to the sticker book
+   * @param {Boolean}     options.keylisteners  A boolean indicating whether to attach key event listeners to the stage
    */
-  constructor(w, h, container) {
+  constructor(w, h, container, options = {}) {
+    options = Object.assign({}, defaultOptions, options);
+
     this.app = new PIXI.Application(w, h, { backgroundColor: 0x666666 });
 
     this.container = container;
@@ -44,8 +52,10 @@ class Stage {
     this.onKeyPress = this.onKeyPress.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
 
-    window.addEventListener("keydown", this.onKeyPress);
-    window.addEventListener("keyup", this.onKeyUp);
+    if(options.keylisteners === true) {
+      window.addEventListener("keydown", this.onKeyPress);
+      window.addEventListener("keyup", this.onKeyUp);
+    }
 
     window.t = this;
   }
