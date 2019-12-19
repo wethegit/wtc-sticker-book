@@ -42,6 +42,9 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 window.resources = _Preloader.resources;
+var defaultOptions = {
+  keylisteners: true
+};
 /**
  * A class that provides a stage for the WTC Stickerbook
  *
@@ -59,13 +62,18 @@ function () {
    * The Stage Class constructor
    *
    * @constructor
-   * @param {number}      w                 The width coord
-   * @param {number}      h                 The height coord
-   * @param {HTMLElement} container         The HTML element that wull contain the PIXI stage element
+   * @param {number}      w                     The width coord
+   * @param {number}      h                     The height coord
+   * @param {HTMLElement} container             The HTML element that wull contain the PIXI stage element
+   * @param {Object}      options               Extra options to pass to the sticker book
+   * @param {Boolean}     options.keylisteners  A boolean indicating whether to attach key event listeners to the stage
    */
   function Stage(w, h, container) {
+    var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+
     _classCallCheck(this, Stage);
 
+    options = Object.assign({}, defaultOptions, options);
     this.app = new PIXI.Application(w, h, {
       backgroundColor: 0x666666
     });
@@ -83,8 +91,12 @@ function () {
     this.onClick = this.onClick.bind(this);
     this.onKeyPress = this.onKeyPress.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
-    window.addEventListener("keydown", this.onKeyPress);
-    window.addEventListener("keyup", this.onKeyUp);
+
+    if (options.keylisteners === true) {
+      window.addEventListener("keydown", this.onKeyPress);
+      window.addEventListener("keyup", this.onKeyUp);
+    }
+
     window.t = this;
   }
   /**
