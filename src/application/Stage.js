@@ -8,7 +8,7 @@ import { resources } from "./Preloader";
 window.resources = resources;
 
 const defaultOptions = {
-  keylisteners: true
+  keylisteners: true,
 };
 
 /**
@@ -34,7 +34,10 @@ class Stage {
   constructor(w, h, container, options = {}) {
     options = Object.assign({}, defaultOptions, options);
 
-    this.app = new PIXI.Application(w, h, { backgroundColor: 0x666666, preserveDrawingBuffer: true });
+    this.app = new PIXI.Application(w, h, {
+      backgroundColor: 0x666666,
+      preserveDrawingBuffer: true,
+    });
 
     this.container = container;
 
@@ -52,7 +55,7 @@ class Stage {
     this.onKeyPress = this.onKeyPress.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
 
-    if(options.keylisteners === true) {
+    if (options.keylisteners === true) {
       window.addEventListener("keydown", this.onKeyPress);
       window.addEventListener("keyup", this.onKeyUp);
     }
@@ -77,7 +80,7 @@ class Stage {
      * @param {DisplayObject:Sticker} value - The sticker element to add.
      * @listens Events:stage-reset
      */
-    eventListener.addListener("stage-reset", value => {
+    eventListener.addListener("stage-reset", (value) => {
       this.reset();
     });
     /**
@@ -86,7 +89,7 @@ class Stage {
      * @method
      * @listens Events:stage-download
      */
-    eventListener.addListener("stage-download", value => {
+    eventListener.addListener("stage-download", (value) => {
       this.download();
     });
     /**
@@ -110,7 +113,7 @@ class Stage {
      * @param {number} type - The type of the background, can be scene or tiling.
      * @listens Events:set-background
      */
-    eventListener.addListener("set-background", value => {
+    eventListener.addListener("set-background", (value) => {
       this.setBackground(value);
     });
     /**
@@ -120,7 +123,7 @@ class Stage {
      * @param {DisplayObject:Sticker} value - The sticker element to add.
      * @listens Events:add-sticker
      */
-    eventListener.addListener("add-sticker", value => {
+    eventListener.addListener("add-sticker", (value) => {
       this.addSticker(value);
     });
     /**
@@ -131,7 +134,7 @@ class Stage {
      * @param {string} value - The JSON string representing the scene.
      * @listens Events:add-scene
      */
-    eventListener.addListener("add-scene", value => {
+    eventListener.addListener("add-scene", (value) => {
       this.addScene(value);
     });
     /**
@@ -234,7 +237,7 @@ class Stage {
     // Add our background
     this.setBackground(data.background);
 
-    data.stickers.forEach(sticker => {
+    data.stickers.forEach((sticker) => {
       // Find the class based on the sticker type
       let StickerClass = Stage.stickertypes[sticker.type];
       // coerce the class parameters
@@ -256,6 +259,8 @@ class Stage {
         );
       }
     });
+
+    eventListener.emitEvent("sticker-unfocus", [this]);
   }
   /**
    * This adds a sticker to a specific location on the stage. This is
@@ -272,16 +277,16 @@ class Stage {
     let offset = this.app.view.getBoundingClientRect();
     offset = {
       top: offset.top + document.body.scrollTop,
-      left: offset.left + document.body.scrollLeft
+      left: offset.left + document.body.scrollLeft,
     };
 
     const adjustedGlobalPosition = {
       x: position.x - offset.left,
-      y: position.y - offset.top
+      y: position.y - offset.top,
     };
     const adjustedCanvasPosition = {
       x: adjustedGlobalPosition.x / this.stageRatio,
-      y: adjustedGlobalPosition.y / this.stageRatio
+      y: adjustedGlobalPosition.y / this.stageRatio,
     };
     this.addSticker(value, adjustedCanvasPosition);
   }
@@ -305,10 +310,11 @@ class Stage {
       position: {
         x:
           position && !isNaN(position.x) ? position.x : this.dimensions.x * 0.5,
-        y: position && !isNaN(position.y) ? position.y : this.dimensions.y * 0.5
+        y:
+          position && !isNaN(position.y) ? position.y : this.dimensions.y * 0.5,
       },
       rotation: rotation,
-      radius: radius
+      radius: radius,
     };
 
     // set up the sticker
@@ -338,7 +344,7 @@ class Stage {
     sprite.alpha = 0;
     sprite.scale.x = sprite.scale.y = 0;
     let now = performance.now();
-    const tweener = delta => {
+    const tweener = (delta) => {
       let time = delta - now;
       if (time < 400) {
         sprite.scale.x = sprite.scale.y = sprite.alpha = easeOutExpo(
@@ -356,8 +362,8 @@ class Stage {
 
     this.foreground.addChild(sprite);
 
-    sprite.focus();
-    this.hasFocus = true;
+    // sprite.focus();
+    // this.hasFocus = true;
   }
   /**
    * This adds a background. Backgrounds are always singular, so adding a
@@ -375,7 +381,7 @@ class Stage {
 
     // Clear out the other children (there can only be one background at a time)
     if (this.bg) {
-      this.bg.children.forEach(child => {
+      this.bg.children.forEach((child) => {
         this.bg.removeChild(child);
       });
     }
@@ -445,9 +451,9 @@ class Stage {
   outputScene(format = "json") {
     let output = {
       background: this.background,
-      stickers: []
+      stickers: [],
     };
-    this.foreground.children.forEach(sticker => {
+    this.foreground.children.forEach((sticker) => {
       output.stickers.push(sticker.definition);
     });
 

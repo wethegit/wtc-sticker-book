@@ -75,7 +75,8 @@ function () {
 
     options = Object.assign({}, defaultOptions, options);
     this.app = new PIXI.Application(w, h, {
-      backgroundColor: 0x666666
+      backgroundColor: 0x666666,
+      preserveDrawingBuffer: true
     });
     this.container = container; // Binding necessary functions and callbacks
 
@@ -314,6 +315,8 @@ function () {
           _this3.addSticker(_construct(StickerClass, _toConsumableArray(params)), sticker.position, sticker.rotation, sticker.radius);
         }
       });
+
+      _Events.default.emitEvent("sticker-unfocus", [this]);
     }
     /**
      * This adds a sticker to a specific location on the stage. This is
@@ -413,9 +416,8 @@ function () {
       };
 
       requestAnimationFrame(tweener);
-      this.foreground.addChild(sprite);
-      sprite.focus();
-      this.hasFocus = true;
+      this.foreground.addChild(sprite); // sprite.focus();
+      // this.hasFocus = true;
     }
     /**
      * This adds a background. Backgrounds are always singular, so adding a
